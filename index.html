@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Entra ID Consultant Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Prompt', 'sans-serif'],
+                        print: ['Sarabun', 'sans-serif'] 
+                    },
+                    colors: { msBlue: '#0078D4', msDark: '#004578', msGray: '#f3f2f1' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f3f2f1; }
+        .check-item input:checked + span { text-decoration: line-through; color: #888; }
+        [x-cloak] { display: none !important; }
+
+        /* Animation */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- PRINT SPECIFIC STYLES (Professional A4) --- */
+        @media print {
+            @page { 
+                size: A4; 
+                margin: 10mm 15mm; 
+            }
+            
+            body { 
+                background: white; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                font-family: 'Sarabun', sans-serif;
+                font-size: 11pt;
+                width: 100%;
+            }
+            
+            /* Hide UI Elements */
+            nav, .hero-section, main, .floating-btn, footer.web-footer, .modal-close-btn, .edit-btn, .no-print { 
+                display: none !important; 
+            }
+            
+            /* Show Print Template */
+            #print-template { 
+                display: block !important; 
+                position: relative;
+                width: 100%;
+            }
+
+            /* Layout Grids */
+            .chart-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 15px;
+                margin-bottom: 20px;
+                page-break-inside: avoid;
+            }
+            .chart-box {
+                width: 48%;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 10px;
+                height: 200px;
+            }
+            
+            .analysis-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 15px;
+                margin-bottom: 20px;
+                page-break-inside: avoid;
+            }
+            .analysis-box {
+                width: 48%;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 10pt;
+            }
+            .box-pain { background-color: #fff1f2; border: 1px solid #fecdd3; }
+            .box-rec { background-color: #eff6ff; border: 1px solid #bfdbfe; }
+            .box-plan { background-color: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; page-break-inside: avoid; }
+
+            .print-table th, .print-table td {
+                padding: 4px 8px;
+                font-size: 10pt;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .signature-section {
+                margin-top: 40px;
+                page-break-inside: avoid;
+            }
+            
+            .copyright-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 8pt;
+                color: #999;
+                border-top: 1px solid #eee;
+                padding-top: 5px;
+            }
+        }
+        
+        #print-template { display: none; }
+    </style>
+</head>
+<body class="text-slate-800" x-data="troubleshooter()">
+
+    <nav class="bg-white shadow-md sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-brands fa-microsoft text-2xl text-msBlue mr-3"></i>
+                    <span class="font-semibold text-xl tracking-tight text-slate-700">Entra ID <span class="text-msBlue">Expert Tool</span></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-xs text-slate-400 hidden md:inline">by Mr.Abdulloh Etae-ngoh</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section bg-gradient-to-r from-msDark to-msBlue text-white py-8 shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-2xl md:text-3xl font-bold mb-2">Checklist & Assessment Tool</h1>
+            <p class="opacity-90">ตรวจสอบปัญหา วิเคราะห์สาเหตุ และออกรายงานสรุปผล (Professional Report)</p>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print">
+        <div class="flex overflow-x-auto space-x-2 mb-6 pb-2 border-b border-gray-200">
+            <template x-for="tab in tabs">
+                <button @click="changeTab(tab.id)" 
+                    :class="activeTab === tab.id ? 'border-b-4 border-msBlue text-msBlue font-bold bg-white' : 'text-slate-500 hover:text-msBlue hover:bg-white/50'" 
+                    class="px-5 py-3 whitespace-nowrap transition-all rounded-t-lg text-sm md:text-base flex items-center">
+                    <i :class="tab.icon" class="mr-2"></i>
+                    <span x-text="tab.label"></span>
+                    <span x-show="tab.id === 'bestpractice'" class="ml-2 bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Rec.</span>
+                </button>
+            </template>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-100 min-h-[500px]">
+                    
+                    <div class="flex justify-between items-start mb-4">
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center">
+                            <i :class="currentTabInfo.icon" class="mr-3 text-msBlue"></i>
+                            <span x-text="currentTabInfo.label"></span>
+                        </h2>
+                        <a :href="currentTabInfo.link" target="_blank" class="text-xs text-msBlue hover:underline bg-blue-50 px-2 py-1 rounded"><i class="fa-solid fa-book-open mr-1"></i> MS Learn</a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <h4 class="text-xs font-bold text-green-700 uppercase mb-1">
+                                <i class="fa-solid fa-thumbs-up mr-1"></i> Best Practice
+                            </h4>
+                            <p class="text-sm text-green-900 leading-snug" x-text="currentTabInfo.bestPractice"></p>
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <h4 class="text-xs font-bold text-red-700 uppercase mb-1">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Common Pain Point
+                            </h4>
+                            <p class="text-sm text-red-900 leading-snug" x-text="currentTabInfo.painPoint"></p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-2">Checklist Items</h3>
+                    <div class="space-y-3">
+                        <template x-for="(item, index) in currentTabInfo.checklist" :key="index">
+                            <div @mouseenter="highlightedItem = item" @click="highlightedItem = item"
+                                 class="check-item flex items-start space-x-3 cursor-pointer p-3 rounded-lg border border-transparent transition-all"
+                                 :class="highlightedItem === item ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-300' : 'hover:bg-slate-50 hover:border-slate-200'">
+                                <input type="checkbox" :value="item.text" x-model="report.steps" class="mt-1 w-5 h-5 text-msBlue rounded border-gray-300 focus:ring-msBlue cursor-pointer">
+                                <div class="flex-1">
+                                    <span class="text-slate-700 select-none font-medium block" x-text="item.text"></span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-300 mt-2" :class="highlightedItem === item ? 'text-msBlue' : ''"></i>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-slate-800 text-white rounded-xl p-1 shadow-lg relative overflow-hidden min-h-[200px]">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                    <div class="p-5 h-full flex flex-col">
+                        <div x-show="!highlightedItem" x-transition.opacity class="fade-in">
+                            <h3 class="font-bold mb-3 flex items-center text-lg text-yellow-300"><i class="fa-solid fa-chart-simple mr-2"></i> Progress</h3>
+                            <div class="space-y-4 text-center py-4">
+                                <p class="text-4xl font-bold text-white" x-text="report.steps.length"></p>
+                                <p class="text-xs text-slate-500">Items Checked</p>
+                                <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
+                                    <div class="bg-green-400 h-2 rounded-full transition-all duration-500" :style="`width: ${(report.steps.length / totalItems) * 100}%`"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div x-show="highlightedItem" x-transition.opacity class="fade-in h-full flex flex-col">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-msBlue text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Guide</span>
+                                <button @click.stop="highlightedItem = null" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2 text-white leading-tight" x-text="highlightedItem?.text"></h3>
+                            <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-3">
+                                <div><h4 class="text-xs font-bold text-yellow-400 uppercase mb-1">Impact</h4><p class="text-sm text-slate-300" x-text="highlightedItem?.why"></p></div>
+                                <div><h4 class="text-xs font-bold text-green-400 uppercase mb-1">Action</h4><p class="text-sm text-slate-300" x-text="highlightedItem?.how"></p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button @click="resetData()" class="w-full py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm bg-white transition-colors"><i class="fa-solid fa-trash-can mr-2"></i> Reset Data</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-6 right-6 z-40 floating-btn">
+        <button @click="generateReport()" class="bg-msBlue hover:bg-msDark text-white font-bold py-3 px-6 rounded-full shadow-2xl flex items-center transition-transform hover:scale-105 border-2 border-white">
+            <i class="fa-solid fa-file-signature mr-2"></i> สรุปผล & พิมพ์รายงาน
+        </button>
+    </div>
+
+    <div x-show="showReport" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 modal-ui backdrop-blur-sm" x-cloak x-transition>
+        <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-slate-100 p-5 border-b flex justify-between items-center">
+                <h2 class="font-bold text-xl text-slate-800"><i class="fa-solid fa-pen-to-square text-msBlue mr-2"></i>Prepare Professional Report</h2>
+                <button @click="showReport = false" class="text-slate-400 hover:text-red-500 modal-close-btn"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <div class="md:col-span-1 space-y-4">
+                        <h4 class="font-bold text-slate-700 border-b pb-2">1. General Info</h4>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ticket / Case ID</label>
+                            <input type="text" x-model="report.ticketId" class="w-full border rounded p-2 bg-white focus:border-msBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Engineer Name</label>
+                            <input type="text" x-model="report.engineer" class="w-full border rounded p-2 bg-white focus:border-msBlue focus:outline-none">
+                        </div>
+                        <div class="bg-white p-3 rounded border h-40 flex flex-col justify-center items-center">
+                            <canvas id="scoreChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-1 space-y-4">
+                        <h4 class="font-bold text-slate-700 border-b pb-2">2. Analysis</h4>
+                        <div class="bg-red-50 p-3 rounded-lg border border-red-100">
+                            <label class="block text-xs font-bold text-red-700 uppercase mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Pain Points</label>
+                            <textarea x-model="report.painPoints" class="w-full h-24 p-2 border border-red-200 rounded text-sm focus:ring-2 focus:ring-red-200 focus:outline-none" placeholder="ระบุปัญหาและความเสี่ยง..."></textarea>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <label class="block text-xs font-bold text-blue-700 uppercase mb-2"><i class="fa-solid fa-star mr-1"></i> Recommendations</label>
+                            <textarea x-model="report.recommendations" class="w-full h-24 p-2 border border-blue-200 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:outline-none mb-2" placeholder="ข้อแนะนำ..."></textarea>
+                            <div class="flex flex-wrap gap-1">
+                                <button @click="addRec('Enable MFA')" class="text-[10px] bg-white border border-blue-300 text-blue-700 px-2 py-1 rounded hover:bg-blue-100">+ MFA</button>
+                                <button @click="addRec('Block Legacy')" class="text-[10px] bg-white border border-blue-300 text-blue-700 px-2 py-1 rounded hover:bg-blue-100">+ Legacy Auth</button>
+                                <button @click="addRec('Zero Trust')" class="text-[10px] bg-white border border-blue-300 text-blue-700 px-2 py-1 rounded hover:bg-blue-100">+ Zero Trust</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-1 space-y-4">
+                        <h4 class="font-bold text-slate-700 border-b pb-2">3. Project Plan (Roadmap)</h4>
+                        <div class="bg-green-50 p-3 rounded-lg border border-green-100 h-full">
+                            <label class="block text-xs font-bold text-green-700 uppercase mb-2"><i class="fa-solid fa-timeline mr-1"></i> Implementation Plan</label>
+                            <textarea x-model="report.projectPlan" class="w-full h-48 p-2 border border-green-200 rounded text-sm focus:ring-2 focus:ring-green-200 focus:outline-none mb-2 font-mono" placeholder="Phase 1: ..."></textarea>
+                            <button @click="addPlan('Standard')" class="w-full text-xs bg-white border border-green-300 text-green-700 px-2 py-2 rounded hover:bg-green-100 text-center font-bold">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generate Standard Roadmap
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-white flex justify-end space-x-3">
+                <button @click="showReport = false" class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded">Close</button>
+                <button @click="preparePrint()" class="px-6 py-2 bg-msBlue hover:bg-msDark text-white font-bold rounded shadow flex items-center">
+                    <i class="fa-solid fa-print mr-2"></i> Print Professional Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-template" class="font-print">
+        <div class="flex justify-between items-start border-b-2 border-msBlue pb-4 mb-4">
+            <div class="flex items-center">
+                <i class="fa-brands fa-microsoft text-4xl text-msBlue mr-4"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Strategic Roadmap & Assessment Report</h1>
+                    <p class="text-sm text-slate-500 mt-1">Microsoft Entra ID Security & Operations</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-xs text-slate-400 uppercase tracking-wider mb-1">Generated Date</div>
+                <div class="font-bold text-base" x-text="new Date().toLocaleDateString('th-TH')"></div>
+                <div class="text-xs text-slate-500" x-text="new Date().toLocaleTimeString('th-TH')"></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-8 mb-4 bg-slate-50 p-3 border rounded">
+            <div><span class="text-xs font-bold text-slate-400 uppercase block">Ticket ID</span><span class="text-lg font-bold text-slate-800" x-text="report.ticketId || '-'"></span></div>
+            <div><span class="text-xs font-bold text-slate-400 uppercase block">Engineer / Consultant</span><span class="text-lg font-bold text-slate-800" x-text="report.engineer || '-'"></span></div>
+        </div>
+
+        <div class="chart-row">
+            <div class="chart-box">
+                <h4 class="text-center font-bold text-sm mb-2 text-slate-600">Overall Health Score</h4>
+                <div style="height: 160px; width: 100%;"><canvas id="printScoreChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h4 class="text-center font-bold text-sm mb-2 text-slate-600">Category Analysis</h4>
+                <div style="height: 160px; width: 100%;"><canvas id="printCategoryChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="analysis-row">
+            <div class="analysis-box box-pain">
+                <h4 class="text-red-800 font-bold mb-2 uppercase text-xs border-b border-red-200 pb-1">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Pain Points / Risks
+                </h4>
+                <div class="whitespace-pre-line text-slate-700" x-text="report.painPoints || 'No critical issues recorded.'"></div>
+            </div>
+            <div class="analysis-box box-rec">
+                <h4 class="text-blue-800 font-bold mb-2 uppercase text-xs border-b border-blue-200 pb-1">
+                    <i class="fa-solid fa-star mr-1"></i> Recommendations
+                </h4>
+                <div class="whitespace-pre-line text-slate-700" x-text="report.recommendations || 'No specific recommendations provided.'"></div>
+            </div>
+        </div>
+
+        <div class="analysis-box box-plan" style="width: 100%;">
+            <h4 class="text-green-800 font-bold mb-2 uppercase text-xs border-b border-green-200 pb-1">
+                <i class="fa-solid fa-timeline mr-1"></i> Project Plan & Roadmap
+            </h4>
+            <div class="whitespace-pre-line text-slate-700 font-mono text-sm" x-text="report.projectPlan || 'No project plan defined.'"></div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="font-bold text-base border-b border-slate-300 pb-1 mb-2">Execution Log (Selected Actions)</h3>
+            <table class="w-full text-sm text-left text-slate-700 print-table">
+                <thead class="text-xs text-slate-500 uppercase bg-slate-50">
+                    <tr><th class="w-10 text-center">#</th><th>Checklist Item / Action Taken</th><th class="w-20 text-center">Status</th></tr>
+                </thead>
+                <tbody>
+                    <template x-for="(step, index) in report.steps">
+                        <tr><td class="text-center text-slate-400" x-text="index + 1"></td><td x-text="step"></td><td class="text-center text-green-600 font-bold"><i class="fa-solid fa-check"></i> Done</td></tr>
+                    </template>
+                    <tr x-show="report.steps.length === 0"><td colspan="3" class="py-4 text-center text-slate-400 italic">No actions recorded.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid grid-cols-2 gap-12 signature-section">
+            <div class="text-center pt-8 border-t border-slate-300">
+                <p class="font-bold" x-text="report.engineer || 'Service Engineer'"></p>
+                <p class="text-xs text-slate-500 uppercase">Consultant Signature</p>
+            </div>
+            <div class="text-center pt-8 border-t border-slate-300">
+                <p class="font-bold">Customer</p>
+                <p class="text-xs text-slate-500 uppercase">Customer Acknowledgment</p>
+            </div>
+        </div>
+
+        <div class="copyright-footer">
+            &copy; 2026 Entra ID Expert Tool. Developed by <strong>Mr.Abdulloh Etae-ngoh</strong>. All rights reserved.
+        </div>
+    </div>
+
+    <script>
+        let scoreChart, pScoreChart, pCatChart;
+
+        function troubleshooter() {
+            return {
+                activeTab: 'signin',
+                highlightedItem: null,
+                showReport: false,
+                report: { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' },
+                
+                recDatabase: {
+                    'Enable MFA': "Enforce MFA for all users (especially Admins) to block 99.9% of attacks.",
+                    'Block Legacy': "Block Legacy Authentication (POP3/IMAP) to prevent password spray attacks.",
+                    'Zero Trust': "Adopt Zero Trust: Verify explicitly, Use least privilege, Assume breach."
+                },
+                
+                planDatabase: {
+                    'Standard': "Phase 1: Assessment & Planning (Week 1)\n- Review Secure Score & High Risk Users.\n- Identify critical apps for SSO.\n\nPhase 2: Implementation (Week 2-3)\n- Enable MFA for Pilot Group.\n- Configure Conditional Access (Block Legacy Auth).\n- Rollout SSPR (Self-Service Password Reset).\n\nPhase 3: Monitoring & Optimization (Week 4)\n- Monitor Sign-in Logs for policy conflicts.\n- Enforce policies for all users.\n- Handover documentation."
+                },
+
+                tabs: [
+                    { id: 'signin', label: 'Sign-in Issues', icon: 'fa-solid fa-arrow-right-to-bracket' },
+                    { id: 'mfa', label: 'MFA Problems', icon: 'fa-solid fa-mobile-screen-button' },
+                    { id: 'ca', label: 'Conditional Access', icon: 'fa-solid fa-shield-halved' },
+                    { id: 'app', label: 'App / Device', icon: 'fa-solid fa-laptop-code' },
+                    { id: 'sync', label: 'Sync Issues', icon: 'fa-solid fa-rotate' },
+                    { id: 'bestpractice', label: 'Best Practices', icon: 'fa-solid fa-medal' }
+                ],
+                content: {
+                    signin: {
+                        label: 'Sign-in / Login Issues',
+                        icon: 'fa-solid fa-arrow-right-to-bracket',
+                        link: 'https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins',
+                        bestPractice: 'Always check the "Failure Reason" and "Conditional Access" tabs in Sign-in Logs first.',
+                        painPoint: 'Users often report "Login Failed" without details. Generic errors (500121) mask the real issue (MFA, CA, or Lockout).',
+                        checklist: [
+                            { text: 'Check Sign-in logs Error Code', why: 'Logs provide the exact error code (e.g., 500121) which pinpoints the root cause.', how: 'Entra ID > Monitor > Sign-in logs. Filter by Status: Failure. Click the row -> Basic Info -> Failure Reason.' },
+                            { text: 'Verify "Failure reason" in logs', why: 'Generic errors often mask the real issue. The failure reason text is more descriptive.', how: 'Look for messages like "MFA required" or "Conditional Access policy failure".' },
+                            { text: 'Check MFA status in logs', why: 'To confirm if the user passed the first factor but failed the second.', how: 'In Sign-in details, click "Authentication Details" tab to see step-by-step auth flow.' },
+                            { text: 'Verify Location/Device IP', why: 'Account might be blocked due to Impossible Travel or Risky IP.', how: 'Check "Location" and "Device Info" tabs in the log details.' }
+                        ]
+                    },
+                    mfa: {
+                        label: 'MFA Problems',
+                        icon: 'fa-solid fa-mobile-screen-button',
+                        link: 'https://learn.microsoft.com/en-us/entra/identity/authentication/howto-mfa-userdevicesettings',
+                        bestPractice: 'Migrate users from SMS/Voice to Microsoft Authenticator (Number Matching) for better security.',
+                        painPoint: 'MFA Fatigue (users approving accidental prompts) or SMS delivery delays.',
+                        checklist: [
+                            { text: 'Check Auth methods status', why: 'User might not have a valid method registered (e.g., phone changed).', how: 'Entra ID > Users > [User] > Authentication methods.' },
+                            { text: 'Perform "Require re-register"', why: 'Forces the user to set up MFA again, fixing sync issues with the app.', how: 'In user Auth methods page, click "Require re-register MFA" in the top menu.' },
+                            { text: 'Verify Auth Policy', why: 'The specific method (e.g., SMS) might be disabled globally.', how: 'Entra ID > Protection > Authentication methods > Policies.' },
+                            { text: 'Check device time', why: 'TOTP codes fail if device time is off by more than 2 minutes.', how: 'Ask user to check their mobile phone Date & Time settings (Set to Automatic).' }
+                        ]
+                    },
+                    ca: {
+                        label: 'Conditional Access',
+                        icon: 'fa-solid fa-shield-halved',
+                        link: 'https://learn.microsoft.com/en-us/entra/identity/conditional-access/what-if-tool',
+                        bestPractice: 'Use "Report-only" mode when testing new policies to avoid accidental lockouts.',
+                        painPoint: 'Misconfigured policies blocking legitimate access (e.g., blocking all non-compliant devices without exception).',
+                        checklist: [
+                            { text: 'Check CA Policy Assignment', why: 'A new policy might be too restrictive.', how: 'Entra ID > Protection > Conditional Access. Check policies targeting the user.' },
+                            { text: 'Run "What If" tool', why: 'Simulates the login without affecting the user to find the blocking policy.', how: 'In Conditional Access blade, click "What If". Select User, App, and IP.' },
+                            { text: 'Check exclusions', why: 'Ensure emergency accounts or specific service accounts are excluded.', how: 'Review "Exclude" tab in the policy assignments.' },
+                            { text: 'Verify Compliance requirements', why: 'Policy might require a "Compliant Device" (Intune enrolled).', how: 'Check if the policy has "Grant: Require device to be marked as compliant".' }
+                        ]
+                    },
+                    app: {
+                        label: 'App / Device',
+                        icon: 'fa-solid fa-laptop-code',
+                        link: 'https://learn.microsoft.com/en-us/entra/identity/devices/troubleshoot-device-dsregcmd',
+                        bestPractice: 'Enforce Device Compliance (Intune) for accessing sensitive data (SharePoint/Exchange).',
+                        painPoint: 'Device becomes "Not Compliant" due to missed updates, blocking access to work apps.',
+                        checklist: [
+                            { text: 'Check Entra ID Registration', why: 'Device must be known to Azure AD for CA policies to work.', how: 'Entra ID > Devices. Search for device name.' },
+                            { text: 'Verify Intune Compliance', why: 'If device is "Not Compliant", access to resources might be blocked.', how: 'Intune Admin Center > Devices. Check compliance status.' },
+                            { text: 'Run Company Portal Sync', why: 'Updates the device status with the server immediately.', how: 'On the user device, open Company Portal app > Settings > Sync.' },
+                            { text: 'Check Join Type', why: 'Hybrid Join vs Azure AD Join behave differently.', how: 'Check "Join Type" column in Entra ID > Devices.' }
+                        ]
+                    },
+                    sync: {
+                        label: 'Directory Sync',
+                        icon: 'fa-solid fa-rotate',
+                        link: 'https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-connect-object-not-syncing',
+                        bestPractice: 'Monitor Azure AD Connect Health agent for sync errors.',
+                        painPoint: 'Password Writeback failures or attributes not updating in Cloud due to sync delay.',
+                        checklist: [
+                            { text: 'Check AD Connect Health', why: 'Detects if the sync server is down or having errors.', how: 'Entra ID > Hybrid management > Azure AD Connect Health.' },
+                            { text: 'Verify Sync Service', why: 'The Windows Service on the server might have stopped.', how: 'On On-Prem Server, check "Microsoft Azure AD Sync" service in services.msc.' },
+                            { text: 'Run Start-ADSyncSyncCycle', why: 'Forces a Delta sync immediately instead of waiting 30 mins.', how: 'PowerShell on Server: Start-ADSyncSyncCycle -PolicyType Delta' },
+                            { text: 'Check Filtering Rules', why: 'User OU might not be in the sync scope.', how: 'Open Synchronization Service Manager > Connectors > Properties.' }
+                        ]
+                    },
+                    bestpractice: {
+                        label: 'Best Practices',
+                        icon: 'fa-solid fa-medal',
+                        link: 'https://learn.microsoft.com/en-us/entra/identity/secure-score/secure-score-overview',
+                        bestPractice: 'Regularly review "Identity Secure Score" to improve security posture.',
+                        painPoint: 'Too many Global Admins (Over-privileged) increases the risk of a full tenant compromise.',
+                        checklist: [
+                            { text: 'Enable MFA for ALL users', why: 'Stops 99.9% of identity attacks.', how: 'Use Conditional Access or Security Defaults.' },
+                            { text: 'Block Legacy Auth', why: 'Legacy protocols (POP/SMTP) bypass MFA.', how: 'Create CA Policy to Block Client Apps: Legacy Authentication.' },
+                            { text: 'Limit Global Admins (<5)', why: 'Reduces the attack surface area.', how: 'Review Roles and Administrators. Downgrade unnecessary GAs.' },
+                            { text: 'Create Break Glass Acct', why: 'To access tenant if MFA service goes down or you get locked out.', how: 'Create a cloud-only account, exclude from MFA/CA, store password in safe.' },
+                            { text: 'Review Secure Score', why: 'Provides a checklist of Microsoft recommendations.', how: 'Entra ID > Protection > Identity Secure Score.' }
+                        ]
+                    }
+                },
+                get currentTabInfo() { return this.content[this.activeTab]; },
+                get totalItems() { return Object.values(this.content).reduce((acc, c) => acc + c.checklist.length, 0); },
+                
+                changeTab(id) {
+                    this.activeTab = id;
+                    this.highlightedItem = null;
+                },
+
+                addRec(key) {
+                    const text = this.recDatabase[key];
+                    this.report.recommendations = this.report.recommendations ? this.report.recommendations + "\n\n- " + text : "- " + text;
+                },
+                
+                addPlan(key) {
+                    this.report.projectPlan = this.planDatabase[key];
+                },
+
+                resetData() { if(confirm('Reset all data?')) { this.report.steps = []; this.report.painPoints = ''; this.report.recommendations = ''; this.report.projectPlan = ''; } },
+
+                generateReport() {
+                    this.showReport = true;
+                    setTimeout(() => {
+                        const checked = this.report.steps.length;
+                        const ctx = document.getElementById('scoreChart');
+                        if(ctx) {
+                            if(scoreChart) scoreChart.destroy();
+                            scoreChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: { labels: ['Done', 'Pending'], datasets: [{ data: [checked, this.totalItems - checked], backgroundColor: ['#0078D4', '#e2e8f0'], borderWidth: 0 }] },
+                                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+                            });
+                        }
+                    }, 100);
+                },
+
+                preparePrint() {
+                    const checked = this.report.steps.length;
+                    const catData = Object.keys(this.content).map(k => this.content[k].checklist.filter(i => this.report.steps.includes(i.text)).length);
+                    const pCtx = document.getElementById('printScoreChart');
+                    const bCtx = document.getElementById('printCategoryChart');
+
+                    if(pCtx) {
+                        if(pScoreChart) pScoreChart.destroy();
+                        pScoreChart = new Chart(pCtx, {
+                            type: 'doughnut',
+                            data: { labels: ['Completed', 'Pending'], datasets: [{ data: [checked, this.totalItems - checked], backgroundColor: ['#0078D4', '#e2e8f0'], borderWidth: 0 }] },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }, animation: { duration: 0 } }
+                        });
+                    }
+                    if(bCtx) {
+                        if(pCatChart) pCatChart.destroy();
+                        pCatChart = new Chart(bCtx, {
+                            type: 'bar',
+                            data: { labels: ['Sign-in', 'MFA', 'CA', 'App', 'Sync', 'BP'], datasets: [{ label: 'Actions', data: catData, backgroundColor: '#005A9E' }] },
+                            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { display: false } }, x: { ticks: { font: { size: 9 } } } }, plugins: { legend: { display: false } }, animation: { duration: 0 } }
+                        });
+                    }
+                    setTimeout(() => window.print(), 300);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
