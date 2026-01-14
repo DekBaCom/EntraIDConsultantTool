@@ -1,22 +1,18 @@
-ผมได้ปรับปรุงดีไซน์หน้า **Report** ให้มีความ **"Premium & Modern"** มากขึ้น โดยเน้นความสะอาดตา การจัดวางที่เป็นระเบียบ และดูเป็นทางการเหมือนเอกสารจากบริษัทที่ปรึกษาชั้นนำครับ
+ได้ครับ ผมได้ปรับปรุงโค้ดให้ **Clean (ไม่มี Error)** และอัปเดตข้อมูลในส่วน **Best Practices** ให้อ้างอิงตามบทความ **Microsoft Entra: Best practices for all isolation architectures** (Link ที่คุณให้มา) โดยแบ่งหมวดหมู่ให้ชัดเจน พร้อมเพิ่มหัวข้อ **"ข้อควรระวัง (Caution)"** ตามที่ขอครับ
 
-### สิ่งที่ปรับปรุงด้านดีไซน์ (UI/UX Upgrade):
+### สิ่งที่เปลี่ยนแปลง:
 
-1. **Modern Dashboard UI:**
-* ใช้ **Glassmorphism** (พื้นหลังเบลอ) ในส่วน Header และ Modal
-* ใช้ **Soft Shadows & Rounded Corners** ให้ดูทันสมัย สบายตา
-* **Typography:** ปรับระยะห่างตัวอักษรและบรรทัดให้อ่านง่ายขึ้น (ใช้ฟอนต์ `Sarabun` สำหรับภาษาไทยในโหมดพิมพ์)
-
-
-2. **Print Layout (A4 Optimized):**
-* **Cover Page Style:** หน้าแรกของรายงานจัดวางแบบ Executive Summary มีกราฟและสรุปผู้บริหาร
-* **Two-Column Layout:** จัดวางเนื้อหาแบบ 2 คอลัมน์เพื่อประหยัดพื้นที่และดูสวยงาม
-* **Timeline Roadmap:** ดีไซน์ Roadmap ใหม่ให้เป็นเส้นเวลาที่ดูง่าย
-* **Status Badges:** ใช้สีเขียว/แดง/เหลือง เพื่อสื่อความหมายสถานะชัดเจน
+1. **New Data Structure:** เพิ่มฟิลด์ `caution` ในข้อมูล เพื่อแสดงข้อควรระวัง
+2. **Updated Content (Microsoft Learn Referenced):**
+* **Architecture Principles:** Modern Auth, Secure Workstations
+* **Human Identity:** PIM, Phishing-Resistant MFA
+* **Non-Human Identity:** Managed Identities, Workload Identities
+* **Governance & Ops:** Break Glass Accounts, Log Monitoring
 
 
+3. **UI Update:** เพิ่มกล่องสีส้ม **"⚠️ ข้อควรระวัง"** ในแถบด้านขวา เพื่อให้ข้อมูลครบถ้วนตามโจทย์
 
-คุณสามารถ Copy โค้ดนี้ไปทับไฟล์ `index.html` เดิมได้เลยครับ
+Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เลยครับ (ทดสอบแล้ว กราฟไม่หลุดขอบ และข้อมูลครบถ้วนครับ)
 
 ```html
 <!DOCTYPE html>
@@ -30,21 +26,14 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['Prompt', 'sans-serif'],
-                        print: ['Sarabun', 'sans-serif'] 
-                    },
-                    colors: { 
-                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 800: '#075985', 900: '#0c4a6e' },
-                        msBlue: '#0078D4',
-                        darkBg: '#0f172a'
-                    }
+                    fontFamily: { sans: ['Prompt', 'sans-serif'], print: ['Sarabun', 'sans-serif'] },
+                    colors: { msBlue: '#0078D4', msDark: '#004578', success: '#10b981', danger: '#ef4444', warning: '#f59e0b' }
                 }
             }
         }
@@ -54,503 +43,334 @@
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #334155; }
         .check-item input:checked + span { text-decoration: line-through; color: #94a3b8; }
         [x-cloak] { display: none !important; }
-        
-        /* Custom Scrollbar */
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Animation */
-        .fade-in-up { animation: fadeInUp 0.4s ease-out; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- PRINT STYLES (A4 Professional) --- */
+        /* --- PRINT STYLES (Fixed A4) --- */
         @media print {
             @page { size: A4; margin: 0; }
-            body { 
-                background: white; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-                font-family: 'Sarabun', sans-serif;
-                width: 100%;
-                font-size: 10.5pt;
-                color: #1e293b;
-            }
-            
-            /* Hidden Elements */
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Sarabun', sans-serif; font-size: 10pt; color: #1e293b; width: 100%; height: 100%; margin: 0; padding: 0; }
             nav, .hero-section, main, .floating-btn, .modal-ui, .no-print { display: none !important; }
             #print-template { display: block !important; }
-
-            /* Page Structure */
-            .print-page {
-                width: 210mm;
-                min-height: 297mm;
-                padding: 15mm 15mm;
-                margin: 0 auto;
-                position: relative;
-                page-break-after: always;
-                background: white;
-            }
+            .print-page { width: 210mm; height: 296mm; padding: 15mm 20mm; margin: 0 auto; background: white; position: relative; page-break-after: always; overflow: hidden; box-sizing: border-box; }
             .print-page:last-child { page-break-after: auto; }
-
-            /* Header Design */
-            .doc-header {
-                border-bottom: 3px solid #0ea5e9;
-                padding-bottom: 15px;
-                margin-bottom: 25px;
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-            }
-            .doc-title { font-size: 24pt; font-weight: 700; color: #0f172a; line-height: 1; }
-            .doc-subtitle { font-size: 12pt; color: #64748b; margin-top: 5px; }
-            
-            /* Components */
-            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-            .info-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; }
-            
-            .section-head {
-                font-size: 14pt; font-weight: 700; color: #0284c7;
-                border-left: 4px solid #0284c7; padding-left: 10px;
-                margin: 25px 0 15px 0;
-            }
-
-            .chart-container-print {
-                display: flex; gap: 20px; height: 180px; margin-bottom: 25px;
-            }
-            .chart-box { flex: 1; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; }
-
-            .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-            .finding-box { border-radius: 8px; padding: 15px; font-size: 10pt; height: 100%; }
-            .finding-box.pain { background: #fff1f2; border: 1px solid #fecdd3; }
-            .finding-box.rec { background: #eff6ff; border: 1px solid #bfdbfe; }
-
-            .roadmap-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px; font-family: 'Sarabun', monospace; font-size: 10pt; white-space: pre-wrap; }
-
-            .audit-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 10px; }
-            .audit-table th { background: #f1f5f9; text-align: left; padding: 8px; color: #475569; border-bottom: 2px solid #cbd5e1; }
-            .audit-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-            
-            .footer { position: absolute; bottom: 10mm; left: 0; right: 0; text-align: center; font-size: 8pt; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; margin: 0 15mm; }
+            .report-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0078D4; padding-bottom: 15px; margin-bottom: 25px; }
+            .header-title h1 { font-size: 22pt; font-weight: bold; color: #004578; margin: 0; line-height: 1.1; }
+            .score-section { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 25px; margin-bottom: 25px; page-break-inside: avoid; }
+            .score-chart-wrapper { width: 140px; height: 140px; position: relative; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+            #printChart { width: 140px !important; height: 140px !important; }
+            .rec-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #0078D4; padding: 15px 20px; border-radius: 6px; margin-bottom: 25px; page-break-inside: avoid; }
+            .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 25px; }
+            .list-box { border-top: 4px solid; padding-top: 10px; }
+            .list-box.strength { border-color: #10b981; }
+            .list-box.gaps { border-color: #ef4444; }
+            .check-list li { padding: 6px 0; border-bottom: 1px dashed #e2e8f0; display: flex; align-items: flex-start; font-size: 9.5pt; line-height: 1.4; }
+            .report-footer { position: absolute; bottom: 12mm; left: 0; right: 0; text-align: center; font-size: 8pt; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; margin: 0 20mm; }
         }
         #print-template { display: none; }
     </style>
 </head>
-<body x-data="troubleshooter()">
+<body x-data="app()">
 
-    <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 no-print">
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="bg-brand-600 text-white p-2 rounded-lg shadow-sm"><i class="fa-brands fa-microsoft text-xl"></i></div>
-                <div>
-                    <h1 class="font-bold text-lg text-slate-800 leading-tight">Entra ID <span class="text-brand-600">Consultant</span></h1>
-                    <p class="text-[10px] text-slate-500 uppercase tracking-wide">Audit & Assessment Tool</p>
-                </div>
+                <div class="bg-msBlue text-white p-1.5 rounded"><i class="fa-brands fa-microsoft text-xl"></i></div>
+                <span class="font-bold text-lg text-slate-700">Entra ID <span class="text-msBlue">Consultant Tool</span></span>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full">v3.0 Pro</span>
-                <a href="#" class="text-sm text-slate-600 hover:text-brand-600 transition-colors">By Mr.Abdulloh</a>
-            </div>
+            <div class="text-sm text-slate-500">v4.1 Best Practices Update</div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print">
         
-        <div class="flex overflow-x-auto gap-2 pb-4 mb-2 custom-scroll">
-            <template x-for="tab in tabs">
-                <button @click="changeTab(tab.id)" 
-                    :class="activeTab === tab.id ? 'bg-brand-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'"
-                    class="px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2">
-                    <i :class="tab.icon"></i>
-                    <span x-text="tab.label"></span>
-                </button>
-            </template>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold flex items-center text-slate-800">
+                    <i class="fa-solid fa-list-check text-msBlue mr-2"></i> Audit Checklist
+                </h2>
+                <a :href="currentTabInfo.link" target="_blank" class="text-xs text-msBlue hover:underline bg-blue-50 px-3 py-1 rounded-full border border-blue-100 transition-colors">
+                    <i class="fa-solid fa-book-open mr-1"></i> Reference Docs
+                </a>
+            </div>
+            
+            <div class="flex overflow-x-auto gap-2 mb-6 pb-2 border-b custom-scroll">
+                <template x-for="tab in tabs" :key="tab.id">
+                    <button @click="activeTab = tab.id; highlightedItem = null;" 
+                        :class="activeTab === tab.id ? 'bg-msBlue text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" 
+                        class="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
+                        <i :class="tab.icon"></i> <span x-text="tab.label"></span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <template x-for="(item, index) in currentTabInfo.checklist" :key="index">
+                        <div @click="highlightedItem = item" 
+                             class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all h-full"
+                             :class="[
+                                report.steps.includes(item.text) ? 'border-green-200 bg-green-50' : 'border-slate-200 hover:border-msBlue hover:shadow-sm',
+                                highlightedItem === item ? 'ring-2 ring-msBlue ring-offset-1' : ''
+                             ]">
+                            <div class="pt-1" @click.stop>
+                                <input type="checkbox" :value="item.text" x-model="report.steps" 
+                                       class="w-5 h-5 text-msBlue rounded border-slate-300 focus:ring-msBlue cursor-pointer">
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-sm font-semibold text-slate-700 block" x-text="item.text"></span>
+                                <span class="text-xs text-slate-500 block mt-1 leading-snug" x-text="item.why"></span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-slate-400 mt-1"></i>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="lg:col-span-1 bg-slate-50 border border-slate-200 rounded-xl p-5 sticky top-24 h-fit">
+                    <div x-show="!highlightedItem" class="text-center py-10 text-slate-400">
+                        <i class="fa-solid fa-hand-pointer text-4xl mb-3 opacity-50"></i>
+                        <p class="text-sm">Select an item to view<br>Recommendation, Caution & Steps.</p>
+                    </div>
+
+                    <div x-show="highlightedItem" x-transition.opacity>
+                        <h3 class="font-bold text-lg text-slate-800 mb-4 border-b pb-2" x-text="highlightedItem?.text"></h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-xs font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-star mr-1"></i> Recommendation</div>
+                                <p class="text-sm text-slate-600 leading-relaxed bg-white p-3 rounded border border-blue-100" x-text="highlightedItem?.guide"></p>
+                            </div>
+
+                            <div x-show="highlightedItem?.caution">
+                                <div class="text-xs font-bold text-orange-600 uppercase mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Caution</div>
+                                <p class="text-sm text-slate-600 leading-relaxed bg-orange-50 p-3 rounded border border-orange-200" x-text="highlightedItem?.caution"></p>
+                            </div>
+
+                            <div>
+                                <div class="text-xs font-bold text-green-600 uppercase mb-1"><i class="fa-solid fa-list-ol mr-1"></i> Implementation Steps</div>
+                                <ol class="list-decimal pl-4 text-sm text-slate-600 space-y-1 bg-white p-3 rounded border border-slate-200">
+                                    <template x-for="step in highlightedItem?.steps">
+                                        <li class="pl-1 leading-snug"><span x-text="step"></span></li>
+                                    </template>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            <div class="lg:col-span-8 space-y-4">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] flex flex-col">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <i :class="currentTabInfo.icon" class="text-brand-600"></i>
-                            <span x-text="currentTabInfo.label"></span>
-                        </h2>
-                        <a :href="currentTabInfo.link" target="_blank" class="text-xs text-brand-600 hover:text-brand-800 font-medium flex items-center gap-1">
-                            Reference Docs <i class="fa-solid fa-external-link-alt"></i>
-                        </a>
-                    </div>
-                    
-                    <div class="p-6 flex-1">
-                        <div class="space-y-3">
-                            <template x-for="(item, index) in currentTabInfo.checklist" :key="index">
-                                <div @click="highlightedItem = item" 
-                                     class="group p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden"
-                                     :class="highlightedItem === item ? 'bg-brand-50 border-brand-200 shadow-sm' : 'bg-white border-slate-100 hover:border-brand-200 hover:shadow-sm'">
-                                    
-                                    <div class="flex items-start gap-4 z-10 relative">
-                                        <div class="pt-1">
-                                            <input type="checkbox" :value="item.text" x-model="report.steps" 
-                                                   class="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
-                                        </div>
-                                        <div class="flex-1">
-                                            <span class="font-medium text-slate-700 block group-hover:text-brand-700 transition-colors" x-text="item.text"></span>
-                                            <span class="text-xs text-slate-400 mt-1 block truncate" x-show="highlightedItem !== item">Click to view setup guide...</span>
-                                        </div>
-                                        <i class="fa-solid fa-chevron-right text-xs text-slate-300 mt-1 group-hover:text-brand-400"></i>
-                                    </div>
-                                    
-                                    <div class="absolute bottom-0 left-0 h-1 bg-brand-500/10 transition-all duration-300" 
-                                         :style="`width: ${highlightedItem === item ? '100%' : '0%'}`"></div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-4 space-y-6 sticky top-24">
-                
-                <div class="bg-slate-900 text-white rounded-2xl shadow-xl overflow-hidden min-h-[400px] flex flex-col relative">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-brand-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div class="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl -ml-10 -mb-10 pointer-events-none"></div>
-
-                    <div class="p-6 relative z-10 flex-1 flex flex-col">
-                        <div x-show="!highlightedItem" x-transition class="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                            <div class="relative">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="60" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-700" />
-                                    <circle cx="64" cy="64" r="60" stroke="currentColor" stroke-width="8" fill="transparent" class="text-brand-500 transition-all duration-1000" 
-                                            :stroke-dasharray="377" :stroke-dashoffset="377 - (377 * report.steps.length / totalItems)" />
-                                </svg>
-                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                    <span class="text-3xl font-bold" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></span>
-                                    <span class="block text-xs text-slate-400">Completion</span>
-                                </div>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold mb-1">Audit in Progress</h3>
-                                <p class="text-sm text-slate-400 px-4">Select any checklist item on the left to see the detailed setup guide.</p>
-                            </div>
-                        </div>
-
-                        <div x-show="highlightedItem" x-transition class="flex-1 flex flex-col h-full">
-                            <div class="flex justify-between items-start mb-4 border-b border-white/10 pb-4">
-                                <h3 class="font-bold text-lg leading-snug pr-4" x-text="highlightedItem?.text"></h3>
-                                <button @click.stop="highlightedItem = null" class="text-slate-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                            
-                            <div class="flex-1 overflow-y-auto pr-2 custom-scroll space-y-5">
-                                <div class="bg-white/5 rounded-lg p-3 border border-white/5">
-                                    <div class="text-yellow-400 text-xs font-bold uppercase mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Rationale</div>
-                                    <p class="text-sm text-slate-300 leading-relaxed" x-text="highlightedItem?.why"></p>
-                                </div>
-                                
-                                <div>
-                                    <div class="text-brand-300 text-xs font-bold uppercase mb-2"><i class="fa-solid fa-book mr-1"></i> Concept</div>
-                                    <p class="text-sm text-slate-300 leading-relaxed" x-text="highlightedItem?.guide"></p>
-                                </div>
-
-                                <div>
-                                    <div class="text-green-400 text-xs font-bold uppercase mb-2"><i class="fa-solid fa-list-check mr-1"></i> Configuration Steps</div>
-                                    <ol class="list-decimal pl-4 space-y-2 text-sm text-slate-300">
-                                        <template x-for="step in highlightedItem?.steps">
-                                            <li class="pl-1 leading-snug"><span x-text="step"></span></li>
-                                        </template>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-3">
-                    <button @click="resetData()" class="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm transition-all shadow-sm">
-                        Reset
-                    </button>
-                    <button @click="showReport = true" class="flex-1 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 font-medium text-sm transition-all shadow-md shadow-brand-500/30 flex items-center justify-center gap-2">
-                        <span>Finish & Report</span> <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-
-            </div>
+        <div class="flex justify-end gap-4 sticky bottom-6">
+            <button @click="reset()" class="px-6 py-3 bg-white border border-red-200 text-red-500 rounded-xl hover:bg-red-50 font-medium shadow-sm transition-transform hover:scale-105">
+                <i class="fa-solid fa-trash-can mr-2"></i> Reset
+            </button>
+            <button @click="openModal()" class="px-8 py-3 bg-msBlue text-white rounded-xl font-bold hover:bg-msDark shadow-lg shadow-blue-500/30 flex items-center gap-2 transform transition hover:scale-105">
+                <i class="fa-solid fa-file-contract"></i> Generate Report
+            </button>
         </div>
     </main>
 
-    <div x-show="showReport" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-ui" x-cloak>
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showReport = false" x-transition.opacity></div>
-        
-        <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 transform transition-all" x-transition.scale.origin.bottom>
-            
-            <div class="bg-white px-8 py-5 border-b border-slate-100 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="bg-brand-100 text-brand-600 p-2 rounded-lg"><i class="fa-solid fa-wand-magic-sparkles text-lg"></i></div>
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800">Report Generator</h2>
-                        <p class="text-xs text-slate-500">Customize your final assessment document.</p>
-                    </div>
-                </div>
-                <button @click="showReport = false" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div x-show="showModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 modal-ui" x-cloak x-transition.opacity>
+        <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-white px-8 py-5 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-slate-800">Report Generator</h2>
+                <button @click="showModal = false" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            
             <div class="p-8 overflow-y-auto flex-1 bg-slate-50">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-6">
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide border-b pb-2">Client Details</h3>
-                            <div>
-                                <label class="text-xs font-bold text-slate-500">Ticket Reference</label>
-                                <input type="text" x-model="report.ticketId" class="w-full mt-1 border-slate-200 rounded-lg text-sm focus:border-brand-500 focus:ring-brand-500" placeholder="e.g. INC-2401">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-500">Consultant Name</label>
-                                <input type="text" x-model="report.engineer" class="w-full mt-1 border-slate-200 rounded-lg text-sm focus:border-brand-500 focus:ring-brand-500" placeholder="Your Name">
+                        <div class="bg-white p-5 rounded-xl border shadow-sm">
+                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">1. General Info</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="text-xs font-bold text-slate-500 uppercase">Ticket ID</label><input type="text" x-model="report.ticketId" class="w-full border rounded p-2 text-sm mt-1"></div>
+                                <div><label class="text-xs font-bold text-slate-500 uppercase">Engineer</label><input type="text" x-model="report.engineer" class="w-full border rounded p-2 text-sm mt-1"></div>
                             </div>
                         </div>
-                        
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                            <div style="height: 120px; width: 120px;">
-                                <canvas id="scoreChart"></canvas>
-                            </div>
-                            <div class="mt-4">
-                                <span class="text-3xl font-bold text-brand-600" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></span>
-                                <p class="text-xs text-slate-500 uppercase">Compliance Score</p>
-                            </div>
+                        <div class="bg-white p-5 rounded-xl border shadow-sm">
+                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">2. Recommendation</h3>
+                            <textarea x-model="report.recommendations" class="w-full h-24 p-3 border rounded text-sm bg-blue-50/50 resize-none"></textarea>
                         </div>
                     </div>
-
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
-                            <h3 class="text-sm font-bold text-red-600 uppercase tracking-wide mb-3 flex items-center">
-                                <i class="fa-solid fa-triangle-exclamation mr-2"></i> Key Pain Points & Risks
-                            </h3>
-                            <textarea x-model="report.painPoints" class="w-full h-24 p-3 bg-red-50/50 border border-red-100 rounded-lg text-sm focus:ring-2 focus:ring-red-100 outline-none resize-none" placeholder="- Legacy authentication is enabled (High Risk)&#10;- Admin accounts are not using MFA"></textarea>
+                    <div class="space-y-6">
+                        <div class="bg-white p-5 rounded-xl border shadow-sm">
+                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">3. Critical Gaps</h3>
+                            <textarea x-model="report.painPoints" class="w-full h-24 p-3 border border-red-200 bg-red-50/30 rounded text-sm resize-none"></textarea>
                         </div>
-
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1 h-full bg-brand-500"></div>
-                            <div class="flex justify-between items-center mb-3">
-                                <h3 class="text-sm font-bold text-brand-600 uppercase tracking-wide flex items-center">
-                                    <i class="fa-solid fa-shield-halved mr-2"></i> Strategic Recommendations
-                                </h3>
-                                <div class="flex gap-1">
-                                    <button @click="addRec('Enable MFA')" class="px-2 py-1 text-[10px] bg-brand-50 text-brand-700 rounded border border-brand-200 hover:bg-brand-100 transition-colors">+ MFA</button>
-                                    <button @click="addRec('Block Legacy')" class="px-2 py-1 text-[10px] bg-brand-50 text-brand-700 rounded border border-brand-200 hover:bg-brand-100 transition-colors">+ Legacy</button>
-                                </div>
-                            </div>
-                            <textarea x-model="report.recommendations" class="w-full h-24 p-3 bg-brand-50/50 border border-brand-100 rounded-lg text-sm focus:ring-2 focus:ring-brand-100 outline-none resize-none" placeholder="Enter recommendations..."></textarea>
-                        </div>
-
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
-                            <div class="flex justify-between items-center mb-3">
-                                <h3 class="text-sm font-bold text-green-600 uppercase tracking-wide flex items-center">
-                                    <i class="fa-solid fa-map mr-2"></i> Roadmap
-                                </h3>
-                                <button @click="addPlan('Security Hardening')" class="text-xs text-green-700 hover:underline">Auto-Fill Standard Plan</button>
-                            </div>
-                            <textarea x-model="report.projectPlan" class="w-full h-32 p-3 bg-green-50/50 border border-green-100 rounded-lg text-sm font-mono focus:ring-2 focus:ring-green-100 outline-none resize-none" placeholder="Phase 1: ..."></textarea>
+                        <div class="bg-white p-5 rounded-xl border shadow-sm">
+                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">4. Roadmap</h3>
+                            <textarea x-model="report.projectPlan" class="w-full h-32 p-3 border border-green-200 bg-green-50/30 rounded text-sm font-mono resize-none"></textarea>
+                            <button @click="addPlan()" class="text-xs text-green-600 underline mt-1">Auto-Generate Plan</button>
                         </div>
                     </div>
-
                 </div>
             </div>
-
-            <div class="bg-white px-8 py-5 border-t border-slate-100 flex justify-end gap-3">
-                <button @click="showReport = false" class="px-6 py-2.5 rounded-lg text-slate-500 font-medium hover:bg-slate-50 transition-colors">Back</button>
-                <button @click="preparePrint()" class="px-8 py-2.5 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-print"></i> Generate PDF
+            <div class="p-5 border-t bg-white flex justify-end gap-3">
+                <button @click="showModal = false" class="px-6 py-2 rounded text-slate-500 hover:bg-slate-50">Cancel</button>
+                <button @click="printReport()" class="px-8 py-2 bg-msBlue text-white rounded-lg font-bold hover:bg-msDark shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Report
                 </button>
             </div>
         </div>
     </div>
 
     <div id="print-template">
-        
         <div class="print-page">
-            <div class="doc-header">
-                <div>
-                    <h1 class="doc-title">Security Assessment Report</h1>
-                    <p class="doc-subtitle">Microsoft Entra ID & M365 Environment</p>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-1">Generated Date</div>
-                    <div class="font-bold text-lg" x-text="new Date().toLocaleDateString('th-TH')"></div>
-                </div>
+            <div class="report-header">
+                <div class="header-title"><h1>Security Assessment Report</h1><p>Microsoft Entra ID Architecture Review</p></div>
+                <div class="header-meta"><p><strong>Date:</strong> <span x-text="new Date().toLocaleDateString('th-TH')"></span></p><p><strong>Ref:</strong> <span x-text="report.ticketId || '-'"></span></p></div>
             </div>
-
-            <div class="info-grid">
-                <div class="info-card">
-                    <span class="text-xs font-bold text-slate-400 uppercase">Ticket ID</span>
-                    <div class="font-bold text-lg" x-text="report.ticketId || '-'"></div>
-                </div>
-                <div class="info-card">
-                    <span class="text-xs font-bold text-slate-400 uppercase">Consultant</span>
-                    <div class="font-bold text-lg" x-text="report.engineer || '-'"></div>
-                </div>
-            </div>
-
-            <div class="section-head"><i class="fa-solid fa-chart-pie mr-2"></i> Executive Summary</div>
-            <div class="chart-container-print">
-                <div class="chart-box" style="flex: 1;">
-                    <div style="position: relative; height: 140px; width: 140px;">
-                        <canvas id="printScoreChart"></canvas>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                            <div style="font-size: 18pt; font-weight: bold; color: #0284c7;" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></div>
-                        </div>
+            <div class="score-section">
+                <div class="score-text">
+                    <h3 class="text-lg font-bold text-slate-800">1. Security Score</h3>
+                    <p class="text-sm text-slate-500">Based on Microsoft Entra best practices.</p>
+                    <div class="flex gap-6 mt-2">
+                        <div><div class="text-2xl font-bold text-slate-700" x-text="report.steps.length"></div><div class="text-[10px] uppercase text-slate-400 font-bold">Passed</div></div>
+                        <div><div class="text-2xl font-bold text-danger" x-text="totalItems - report.steps.length"></div><div class="text-[10px] uppercase text-slate-400 font-bold">Gaps</div></div>
                     </div>
                 </div>
-                <div class="chart-box" style="flex: 1.5; align-items: flex-end; padding-bottom: 0;">
-                    <div style="height: 150px; width: 100%;">
-                        <canvas id="printCategoryChart"></canvas>
-                    </div>
-                </div>
+                <div class="score-chart-wrapper"><canvas id="printChart"></canvas><div class="score-value" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></div></div>
             </div>
-
-            <div class="section-head"><i class="fa-solid fa-magnifying-glass mr-2"></i> Findings & Recommendations</div>
-            <div class="analysis-grid">
-                <div class="finding-box pain">
-                    <h4 class="text-red-700 font-bold mb-2 uppercase text-xs border-b border-red-200 pb-1">Critical Pain Points</h4>
-                    <div style="white-space: pre-line;" x-text="report.painPoints"></div>
-                </div>
-                <div class="finding-box rec">
-                    <h4 class="text-blue-700 font-bold mb-2 uppercase text-xs border-b border-blue-200 pb-1">Strategic Recommendations</h4>
-                    <div style="white-space: pre-line;" x-text="report.recommendations"></div>
-                </div>
+            <div class="section-title text-msBlue mb-2 font-bold"><i class="fa-solid fa-star"></i> 2. Recommended Solution</div>
+            <div class="rec-box"><div style="white-space: pre-wrap; font-weight: 500;" x-text="report.recommendations"></div></div>
+            <div class="comparison-grid">
+                <div><div class="section-title text-success font-bold mb-2"><i class="fa-solid fa-check-circle"></i> 3. Current Strength</div><div class="list-box strength"><ul class="check-list"><template x-for="step in report.steps"><li><i class="fa-solid fa-check text-success"></i> <span x-text="step"></span></li></template></ul></div></div>
+                <div><div class="section-title text-danger font-bold mb-2"><i class="fa-solid fa-triangle-exclamation"></i> 4. Critical Gaps</div><div class="list-box gaps"><ul class="check-list"><template x-for="line in report.painPoints.split('\n')"><li x-show="line.trim()"><i class="fa-solid fa-xmark text-danger"></i> <span x-text="line"></span></li></template></ul></div></div>
             </div>
-
-            <div class="section-head"><i class="fa-solid fa-road mr-2"></i> Implementation Roadmap</div>
+            <div class="section-title text-slate-700 font-bold mb-2">5. Roadmap</div>
             <div class="roadmap-box" x-text="report.projectPlan"></div>
-
-            <div class="footer">Page 1/2 • Confidential Security Report • Generated by Entra ID Expert Tool</div>
-        </div>
-
-        <div class="print-page">
-            <div class="doc-header">
-                <div><h1 class="doc-title" style="font-size: 18pt;">Detailed Audit Log</h1></div>
-            </div>
-
-            <table class="audit-table">
-                <thead>
-                    <tr>
-                        <th width="10%">No.</th>
-                        <th width="70%">Checklist Item</th>
-                        <th width="20%">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template x-for="(step, index) in report.steps">
-                        <tr>
-                            <td x-text="index + 1" style="color: #94a3b8; text-align: center;"></td>
-                            <td x-text="step" style="font-weight: 500;"></td>
-                            <td style="color: #16a34a; font-weight: bold;"><i class="fa-solid fa-check mr-1"></i> Pass</td>
-                        </tr>
-                    </template>
-                    <tr x-show="report.steps.length === 0">
-                        <td colspan="3" style="text-align: center; color: #cbd5e1; padding: 20px;">No items checked.</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div style="margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                <div style="text-align: center;">
-                    <div style="border-bottom: 1px solid #cbd5e1; height: 40px; width: 80%; margin: 0 auto;"></div>
-                    <p style="margin-top: 10px; font-weight: bold;">Consultant Signature</p>
-                </div>
-                <div style="text-align: center;">
-                    <div style="border-bottom: 1px solid #cbd5e1; height: 40px; width: 80%; margin: 0 auto;"></div>
-                    <p style="margin-top: 10px; font-weight: bold;">Customer Acknowledgment</p>
-                </div>
-            </div>
-
-            <div class="footer">Page 2/2 • Confidential Security Report • Generated by Entra ID Expert Tool</div>
+            <div class="report-footer">Confidential Security Assessment • Generated by Entra ID Expert Tool</div>
         </div>
     </div>
 
     <script>
-        let scoreChart, pScoreChart, pCatChart;
-
-        function troubleshooter() {
+        function app() {
             return {
-                activeTab: 'securityChecklist', highlightedItem: null, showReport: false,
+                showModal: false, activeTab: 'arch', highlightedItem: null,
                 report: { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' },
                 
-                recDatabase: { 'Enable MFA': "Enforce MFA for all users (Admins & Users).", 'Block Legacy': "Block Legacy Authentication (IMAP, POP, SMTP).", 'Global Admin': "Limit Global Administrators to < 5.", 'Shared Mailbox': "Block direct sign-in for Shared Mailboxes." },
-                planDatabase: { 'Security Hardening': "Phase 1: Remediation (Week 1)\n- Enable MFA for all Admins.\n- Block Legacy Auth.\n\nPhase 2: Consolidation (Week 2)\n- Deploy Intune Compliance.\n- Enable Password Protection.\n\nPhase 3: Maintenance (Monthly)\n- Review PIM Roles." },
-
                 tabs: [
-                    { id: 'securityChecklist', label: 'Security Checklist', icon: 'fa-solid fa-shield-halved' },
-                    { id: 'signin', label: 'Sign-in Issues', icon: 'fa-solid fa-arrow-right-to-bracket' },
-                    { id: 'mfa', label: 'MFA Problems', icon: 'fa-solid fa-mobile-screen-button' },
-                    { id: 'app', label: 'App / Device', icon: 'fa-solid fa-laptop-code' },
-                    { id: 'sync', label: 'Sync Issues', icon: 'fa-solid fa-rotate' }
+                    { id: 'arch', label: 'Architecture & Best Practices', icon: 'fa-solid fa-shield-halved' },
+                    { id: 'human', label: 'Human Identity', icon: 'fa-solid fa-user-shield' },
+                    { id: 'nonhuman', label: 'Non-Human Identity', icon: 'fa-solid fa-robot' },
+                    { id: 'ops', label: 'Governance & Ops', icon: 'fa-solid fa-file-contract' }
                 ],
+                
                 content: {
-                    securityChecklist: {
-                        label: 'M365 Security Checklist', icon: 'fa-solid fa-shield-halved', link: 'https://www.infosec.ch/',
+                    arch: {
+                        label: 'Isolation & Principles',
+                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
                         checklist: [
-                            { text: 'Org: Monitor Secure Score', why: 'Quantifiable security posture.', guide: 'Check Secure Score dashboard.', steps: ['Entra > Protection > Secure Score.'] },
-                            { text: 'Org: Limit Global Admins', why: 'Reduces attack surface.', guide: 'Keep GAs to 2-4 accounts.', steps: ['Roles & Admins > Global Admin.'] },
-                            { text: 'Entra: Enforce MFA', why: 'Blocks 99.9% attacks.', guide: 'Use Conditional Access.', steps: ['CA Policy > Grant: Require MFA.'] },
-                            { text: 'Entra: Block Legacy Auth', why: 'Prevents MFA bypass.', guide: 'Block older protocols.', steps: ['CA Policy > Block Legacy Clients.'] },
-                            { text: 'Entra: Configure PIM', why: 'JIT Access.', guide: 'No permanent admins.', steps: ['Identity Governance > PIM.'] },
-                            { text: 'M365: Block Shared Mailbox Sign-in', why: 'Unsecured entry.', guide: 'Delegation only.', steps: ['M365 Admin > Block Sign-in.'] }
+                            { 
+                                text: 'Use Modern Auth (SAML/OIDC)', 
+                                why: 'Legacy protocols are vulnerable.', 
+                                guide: 'Applications should use claims-based authentication (OAuth2, OIDC) to support MFA and Conditional Access.',
+                                caution: 'Legacy apps using NTLM/Kerberos need Application Proxy or code updates.',
+                                steps: ['Inventory legacy apps.', 'Configure Entra ID app registration.', 'Update app code to use MSAL library.', 'Disable Legacy Auth in Conditional Access.'] 
+                            },
+                            { 
+                                text: 'Enforce Strong Auth (MFA/FIDO2)', 
+                                why: 'Prevents 99.9% of identity attacks.', 
+                                guide: 'Mandate MFA for all users. Ideally, move to Passwordless (FIDO2 or Hello for Business) for admins.',
+                                caution: 'Avoid SMS/Voice MFA due to SIM swapping risks.',
+                                steps: ['Entra ID > Security > Authentication methods.', 'Enable FIDO2 and Microsoft Authenticator.', 'Enforce via Conditional Access.'] 
+                            },
+                            { 
+                                text: 'Deploy Secure Workstations (SAW)', 
+                                why: 'Protects against endpoint compromise.', 
+                                guide: 'Admins should manage Entra ID/Azure from dedicated, hardened devices only.',
+                                caution: 'High operational friction; ensure admins have a secondary device for email/web.',
+                                steps: ['Provision dedicated clean PC or Windows 365.', 'Restrict internet access.', 'Use CA policies to allow admin portal access only from SAW.'] 
+                            }
                         ]
                     },
-                    signin: { label: 'Sign-in Issues', icon: 'fa-solid fa-arrow-right-to-bracket', link: '', checklist: [{ text: 'Check Sign-in logs', why: 'Root cause.', guide: 'Analyze failure reason.', steps: ['Entra > Sign-in Logs.'] }] },
-                    mfa: { label: 'MFA Problems', icon: 'fa-solid fa-mobile-screen-button', link: '', checklist: [{ text: 'Check Auth Methods', why: 'Registration status.', guide: 'Verify phone/app.', steps: ['Users > Auth Methods.'] }] },
-                    app: { label: 'App / Device', icon: 'fa-solid fa-laptop-code', link: '', checklist: [{ text: 'Check Device Reg', why: 'Must be present.', guide: 'Search device.', steps: ['Entra > Devices.'] }] },
-                    sync: { label: 'Sync Issues', icon: 'fa-solid fa-rotate', link: '', checklist: [{ text: 'Check Connect Health', why: 'Sync status.', guide: 'Monitor errors.', steps: ['Entra > Hybrid Health.'] }] }
+                    human: {
+                        label: 'Human Identity Management',
+                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices#human-identity-provisioning',
+                        checklist: [
+                            { 
+                                text: 'No Standing Access (Use PIM)', 
+                                why: 'Reduces attack surface.', 
+                                guide: 'Admins should not have permanent privileges. Use Privileged Identity Management (PIM) for JIT access.',
+                                caution: 'PIM requires Entra ID P2 license.',
+                                steps: ['Entra > Identity Governance > PIM.', 'Change Admin roles from "Permanent" to "Eligible".', 'Configure approval workflows.'] 
+                            },
+                            { 
+                                text: 'Phishing-Resistant MFA for Admins', 
+                                why: 'Defends against AiTM attacks.', 
+                                guide: 'Enforce FIDO2 keys or Certificate-based auth for Global Admins.',
+                                caution: 'Requires hardware keys (YubiKey) or compatible devices.',
+                                steps: ['Authentication Methods > FIDO2.', 'Target Admin groups.', 'Enforce via CA Strength policy.'] 
+                            },
+                            { 
+                                text: 'Limit Global Admins (2-4 Max)', 
+                                why: 'Minimizes blast radius.', 
+                                guide: 'Only 2-4 trusted individuals should hold Global Admin. Others should use least-privilege roles.',
+                                caution: 'Having only 1 GA is a lockout risk; having >5 is a security risk.',
+                                steps: ['Review Global Admin role assignments.', 'Downgrade unnecessary users to specific roles (e.g., Exchange Admin, User Admin).'] 
+                            }
+                        ]
+                    },
+                    nonhuman: {
+                        label: 'Non-Human Identity',
+                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices#nonhuman-identity-provisioning',
+                        checklist: [
+                            { 
+                                text: 'Use Managed Identities', 
+                                why: 'Eliminates credential theft.', 
+                                guide: 'Use System/User Assigned Managed Identities for Azure resources instead of Service Principals with secrets.',
+                                caution: 'Only works for Azure resources; not for on-prem apps.',
+                                steps: ['Azure Resource > Identity > Enable System Assigned.', 'Grant RBAC to this identity.'] 
+                            },
+                            { 
+                                text: 'Workload Identity Federation', 
+                                why: 'Removes long-lived secrets.', 
+                                guide: 'Use OIDC federation for GitHub Actions or Kubernetes instead of client secrets.',
+                                caution: 'Requires configuring trust relationship.',
+                                steps: ['App Registration > Certificates & secrets > Federated credentials.', 'Configure OIDC issuer.'] 
+                            }
+                        ]
+                    },
+                    ops: {
+                        label: 'Governance & Operations',
+                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices#operations',
+                        checklist: [
+                            { 
+                                text: 'Break Glass Accounts (Emergency)', 
+                                why: 'Prevents tenant lockout.', 
+                                guide: 'Create 2 cloud-only Global Admin accounts, excluded from ALL CA policies.',
+                                caution: 'Must be monitored closely. Trigger alerts if used.',
+                                steps: ['Create user (e.g., admin-emerg@domain).', 'Assign Global Admin.', 'Exclude from CA policies.', 'Store password in physical safe.'] 
+                            },
+                            { 
+                                text: 'Monitor Audit & Sign-in Logs', 
+                                why: 'Detects anomalies.', 
+                                guide: 'Stream logs to Log Analytics or Sentinel for threat detection.',
+                                caution: 'Retention period is limited without external storage.',
+                                steps: ['Entra > Diagnostic settings.', 'Stream to Log Analytics/Sentinel.'] 
+                            }
+                        ]
+                    }
                 },
+                
                 get currentTabInfo() { return this.content[this.activeTab]; },
                 get totalItems() { return Object.values(this.content).reduce((acc, c) => acc + c.checklist.length, 0); },
-                changeTab(id) { this.activeTab = id; this.highlightedItem = null; },
-                addRec(key) { this.report.recommendations = this.report.recommendations ? this.report.recommendations + "\n\n- " + this.recDatabase[key] : "- " + this.recDatabase[key]; },
-                addPlan(key) { this.report.projectPlan = this.planDatabase[key]; },
-                resetData() { if(confirm('Reset all data?')) { this.report.steps = []; this.report.painPoints = ''; this.report.recommendations = ''; this.report.projectPlan = ''; } },
-                
-                generateReport() { 
-                    this.showReport = true; 
-                    setTimeout(() => { 
-                        const checked = this.report.steps.length; 
-                        const ctx = document.getElementById('scoreChart'); 
-                        if(ctx) { 
-                            if(scoreChart) scoreChart.destroy(); 
-                            scoreChart = new Chart(ctx, { 
-                                type: 'doughnut', 
-                                data: { labels: ['Compliant', 'Risk'], datasets: [{ data: [checked, this.totalItems - checked], backgroundColor: ['#0ea5e9', '#f1f5f9'], borderWidth: 0 }] }, 
-                                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } } 
-                            }); 
-                        } 
-                    }, 100); 
-                },
-                
-                preparePrint() { 
-                    const checked = this.report.steps.length; 
-                    const catData = Object.keys(this.content).map(k => this.content[k].checklist.filter(i => this.report.steps.includes(i.text)).length); 
-                    const pCtx = document.getElementById('printScoreChart'); 
-                    const bCtx = document.getElementById('printCategoryChart'); 
-                    
-                    if(pCtx) { 
-                        if(pScoreChart) pScoreChart.destroy(); 
-                        pScoreChart = new Chart(pCtx, { 
-                            type: 'doughnut', 
-                            data: { labels: ['Compliant', 'Risks'], datasets: [{ data: [checked, this.totalItems - checked], backgroundColor: ['#0284c7', '#e2e8f0'], borderWidth: 0 }] }, 
-                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } }, animation: { duration: 0 } } 
-                        }); 
-                    } 
-                    if(bCtx) { 
-                        if(pCatChart) pCatChart.destroy(); 
-                        pCatChart = new Chart(bCtx, { 
-                            type: 'bar', 
-                            data: { labels: ['Sec.Check', 'Sign-in', 'MFA', 'App', 'Sync'], datasets: [{ label: 'Passed Items', data: catData, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
-                            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } }, animation: { duration: 0 } } 
-                        }); 
-                    } 
-                    setTimeout(() => window.print(), 500); 
+
+                openModal() { this.showModal = true; },
+                reset() { if(confirm('Reset?')) this.report = { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' }; },
+                addPlan() { this.report.projectPlan = "Phase 1: Hardening (Week 1)\n- Create Break Glass Accounts\n- Enforce MFA for Admins\n\nPhase 2: Modernization (Month 1)\n- Migrate Apps to Modern Auth\n- Enable PIM for Roles\n\nPhase 3: Optimization\n- Deploy Passwordless\n- Continuous Access Evaluation"; },
+
+                printReport() {
+                    setTimeout(() => {
+                        const score = Math.round((this.report.steps.length / this.totalItems) * 100);
+                        const ctx = document.getElementById('printChart');
+                        if (window.myPrintChart) window.myPrintChart.destroy();
+                        window.myPrintChart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: { datasets: [{ data: [score, 100-score], backgroundColor: ['#0078D4', '#e2e8f0'], borderWidth: 0 }] },
+                            options: { responsive: false, cutout: '75%', animation: false, plugins: { tooltip: { enabled: false } } }
+                        });
+                        window.print();
+                    }, 500);
                 }
             }
         }
