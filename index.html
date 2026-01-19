@@ -1,20 +1,3 @@
-ได้ครับ ผมได้ปรับปรุงโค้ดให้ **Clean (ไม่มี Error)** และอัปเดตข้อมูลในส่วน **Best Practices** ให้อ้างอิงตามบทความ **Microsoft Entra: Best practices for all isolation architectures** (Link ที่คุณให้มา) โดยแบ่งหมวดหมู่ให้ชัดเจน พร้อมเพิ่มหัวข้อ **"ข้อควรระวัง (Caution)"** ตามที่ขอครับ
-
-### สิ่งที่เปลี่ยนแปลง:
-
-1. **New Data Structure:** เพิ่มฟิลด์ `caution` ในข้อมูล เพื่อแสดงข้อควรระวัง
-2. **Updated Content (Microsoft Learn Referenced):**
-* **Architecture Principles:** Modern Auth, Secure Workstations
-* **Human Identity:** PIM, Phishing-Resistant MFA
-* **Non-Human Identity:** Managed Identities, Workload Identities
-* **Governance & Ops:** Break Glass Accounts, Log Monitoring
-
-
-3. **UI Update:** เพิ่มกล่องสีส้ม **"⚠️ ข้อควรระวัง"** ในแถบด้านขวา เพื่อให้ข้อมูลครบถ้วนตามโจทย์
-
-Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เลยครับ (ทดสอบแล้ว กราฟไม่หลุดขอบ และข้อมูลครบถ้วนครับ)
-
-```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -32,13 +15,15 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Prompt', 'sans-serif'], print: ['Sarabun', 'sans-serif'] },
-                    colors: { msBlue: '#0078D4', msDark: '#004578', success: '#10b981', danger: '#ef4444', warning: '#f59e0b' }
+                    fontFamily: { 
+                        sans: ['Prompt', 'sans-serif'],
+                        print: ['Sarabun', 'sans-serif'] 
+                    },
+                    colors: { msBlue: '#0078D4', msDark: '#004578', msGray: '#f3f2f1' }
                 }
             }
         }
     </script>
-
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #334155; }
         .check-item input:checked + span { text-decoration: line-through; color: #94a3b8; }
@@ -46,14 +31,13 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        /* --- PRINT STYLES (Fixed A4) --- */
+        /* --- PRINT STYLES --- */
         @media print {
             @page { size: A4; margin: 0; }
-            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Sarabun', sans-serif; font-size: 10pt; color: #1e293b; width: 100%; height: 100%; margin: 0; padding: 0; }
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Sarabun', sans-serif; width: 100%; font-size: 10pt; color: #1e293b; }
             nav, .hero-section, main, .floating-btn, .modal-ui, .no-print { display: none !important; }
             #print-template { display: block !important; }
-            .print-page { width: 210mm; height: 296mm; padding: 15mm 20mm; margin: 0 auto; background: white; position: relative; page-break-after: always; overflow: hidden; box-sizing: border-box; }
-            .print-page:last-child { page-break-after: auto; }
+            .print-page { width: 210mm; min-height: 297mm; padding: 15mm 20mm; margin: 0 auto; background: white; position: relative; page-break-after: always; }
             .report-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0078D4; padding-bottom: 15px; margin-bottom: 25px; }
             .header-title h1 { font-size: 22pt; font-weight: bold; color: #004578; margin: 0; line-height: 1.1; }
             .score-section { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 25px; margin-bottom: 25px; page-break-inside: avoid; }
@@ -78,7 +62,7 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
                 <div class="bg-msBlue text-white p-1.5 rounded"><i class="fa-brands fa-microsoft text-xl"></i></div>
                 <span class="font-bold text-lg text-slate-700">Entra ID <span class="text-msBlue">Consultant Tool</span></span>
             </div>
-            <div class="text-sm text-slate-500">v4.1 Best Practices Update</div>
+            <div class="text-sm text-slate-500">v4.2 Group Analyzer</div>
         </div>
     </nav>
 
@@ -87,10 +71,10 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold flex items-center text-slate-800">
-                    <i class="fa-solid fa-list-check text-msBlue mr-2"></i> Audit Checklist
+                    <i class="fa-solid fa-list-check text-msBlue mr-2"></i> Audit & Tools
                 </h2>
                 <a :href="currentTabInfo.link" target="_blank" class="text-xs text-msBlue hover:underline bg-blue-50 px-3 py-1 rounded-full border border-blue-100 transition-colors">
-                    <i class="fa-solid fa-book-open mr-1"></i> Reference Docs
+                    <i class="fa-solid fa-external-link-alt mr-1"></i> Open Resource
                 </a>
             </div>
             
@@ -128,8 +112,8 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
 
                 <div class="lg:col-span-1 bg-slate-50 border border-slate-200 rounded-xl p-5 sticky top-24 h-fit">
                     <div x-show="!highlightedItem" class="text-center py-10 text-slate-400">
-                        <i class="fa-solid fa-hand-pointer text-4xl mb-3 opacity-50"></i>
-                        <p class="text-sm">Select an item to view<br>Recommendation, Caution & Steps.</p>
+                        <i class="fa-solid fa-laptop-code text-4xl mb-3 opacity-50"></i>
+                        <p class="text-sm">Select an item to view<br>details & usage guide.</p>
                     </div>
 
                     <div x-show="highlightedItem" x-transition.opacity>
@@ -137,22 +121,23 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
                         
                         <div class="space-y-4">
                             <div>
-                                <div class="text-xs font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-star mr-1"></i> Recommendation</div>
+                                <div class="text-xs font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-info-circle mr-1"></i> Description</div>
                                 <p class="text-sm text-slate-600 leading-relaxed bg-white p-3 rounded border border-blue-100" x-text="highlightedItem?.guide"></p>
                             </div>
 
-                            <div x-show="highlightedItem?.caution">
-                                <div class="text-xs font-bold text-orange-600 uppercase mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Caution</div>
-                                <p class="text-sm text-slate-600 leading-relaxed bg-orange-50 p-3 rounded border border-orange-200" x-text="highlightedItem?.caution"></p>
-                            </div>
-
                             <div>
-                                <div class="text-xs font-bold text-green-600 uppercase mb-1"><i class="fa-solid fa-list-ol mr-1"></i> Implementation Steps</div>
+                                <div class="text-xs font-bold text-green-600 uppercase mb-1"><i class="fa-solid fa-terminal mr-1"></i> Usage / Steps</div>
                                 <ol class="list-decimal pl-4 text-sm text-slate-600 space-y-1 bg-white p-3 rounded border border-slate-200">
                                     <template x-for="step in highlightedItem?.steps">
                                         <li class="pl-1 leading-snug"><span x-text="step"></span></li>
                                     </template>
                                 </ol>
+                            </div>
+                            
+                            <div x-show="activeTab === 'tools'" class="mt-4">
+                                <a :href="currentTabInfo.link" target="_blank" class="block w-full text-center py-2 bg-slate-800 text-white rounded-lg text-sm hover:bg-slate-900 transition-colors">
+                                    <i class="fa-brands fa-github mr-2"></i> View on GitHub
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -228,7 +213,7 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
                         <div><div class="text-2xl font-bold text-danger" x-text="totalItems - report.steps.length"></div><div class="text-[10px] uppercase text-slate-400 font-bold">Gaps</div></div>
                     </div>
                 </div>
-                <div class="score-chart-wrapper"><canvas id="printChart"></canvas><div class="score-value" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></div></div>
+                <div class="score-chart-wrapper"><canvas id="printChart" width="140" height="140"></canvas><div class="score-value" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></div></div>
             </div>
             <div class="section-title text-msBlue mb-2 font-bold"><i class="fa-solid fa-star"></i> 2. Recommended Solution</div>
             <div class="rec-box"><div style="white-space: pre-wrap; font-weight: 500;" x-text="report.recommendations"></div></div>
@@ -238,116 +223,70 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
             </div>
             <div class="section-title text-slate-700 font-bold mb-2">5. Roadmap</div>
             <div class="roadmap-box" x-text="report.projectPlan"></div>
-            <div class="report-footer">Confidential Security Assessment • Generated by Entra ID Expert Tool</div>
+            <div class="report-footer">Confidential Security Assessment • Generated by Entra ID Expert Tool • &copy; 2026 Mr.Abdulloh Etae-ngoh</div>
         </div>
     </div>
 
     <script>
         function app() {
             return {
-                showModal: false, activeTab: 'arch', highlightedItem: null,
+                showModal: false, activeTab: 'tools', highlightedItem: null,
                 report: { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' },
                 
                 tabs: [
-                    { id: 'arch', label: 'Architecture & Best Practices', icon: 'fa-solid fa-shield-halved' },
+                    { id: 'tools', label: 'Tools & Scripts', icon: 'fa-solid fa-toolbox' },
+                    { id: 'arch', label: 'Architecture', icon: 'fa-solid fa-shield-halved' },
                     { id: 'human', label: 'Human Identity', icon: 'fa-solid fa-user-shield' },
-                    { id: 'nonhuman', label: 'Non-Human Identity', icon: 'fa-solid fa-robot' },
-                    { id: 'ops', label: 'Governance & Ops', icon: 'fa-solid fa-file-contract' }
+                    { id: 'ops', label: 'Governance', icon: 'fa-solid fa-file-contract' }
                 ],
                 
                 content: {
+                    tools: {
+                        label: 'Group & Policy Analysis Tools',
+                        link: 'https://github.com/jasperbaes/Microsoft-Cloud-Group-Analyzer',
+                        checklist: [
+                            { 
+                                text: 'Microsoft Cloud Group Analyzer', 
+                                why: 'Visualize group dependencies across all services.', 
+                                guide: 'A Node.js script that scans your tenant to find where Entra ID groups are used (CA Policies, Intune, Enterprise Apps, Roles). Helps prevent outages before deleting groups.',
+                                steps: [
+                                    'Pre-req: Install Node.js on your machine.',
+                                    'Clone Repo: git clone https://github.com/jasperbaes/Microsoft-Cloud-Group-Analyzer',
+                                    'Create App Registration in Entra ID (Read Permissions).',
+                                    'Run: npm install && npm start',
+                                    'View "webreport" output to see group usage map.'
+                                ]
+                            },
+                            {
+                                text: 'Entra Exporter (PowerShell)',
+                                why: 'Backup configuration as code.',
+                                guide: 'Export all Entra ID settings to JSON for backup or documentation.',
+                                steps: ['Install-Module EntraExporter', 'Connect-Entra', 'Export-Entra -Path ./Backup']
+                            }
+                        ]
+                    },
                     arch: {
                         label: 'Isolation & Principles',
                         link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
                         checklist: [
-                            { 
-                                text: 'Use Modern Auth (SAML/OIDC)', 
-                                why: 'Legacy protocols are vulnerable.', 
-                                guide: 'Applications should use claims-based authentication (OAuth2, OIDC) to support MFA and Conditional Access.',
-                                caution: 'Legacy apps using NTLM/Kerberos need Application Proxy or code updates.',
-                                steps: ['Inventory legacy apps.', 'Configure Entra ID app registration.', 'Update app code to use MSAL library.', 'Disable Legacy Auth in Conditional Access.'] 
-                            },
-                            { 
-                                text: 'Enforce Strong Auth (MFA/FIDO2)', 
-                                why: 'Prevents 99.9% of identity attacks.', 
-                                guide: 'Mandate MFA for all users. Ideally, move to Passwordless (FIDO2 or Hello for Business) for admins.',
-                                caution: 'Avoid SMS/Voice MFA due to SIM swapping risks.',
-                                steps: ['Entra ID > Security > Authentication methods.', 'Enable FIDO2 and Microsoft Authenticator.', 'Enforce via Conditional Access.'] 
-                            },
-                            { 
-                                text: 'Deploy Secure Workstations (SAW)', 
-                                why: 'Protects against endpoint compromise.', 
-                                guide: 'Admins should manage Entra ID/Azure from dedicated, hardened devices only.',
-                                caution: 'High operational friction; ensure admins have a secondary device for email/web.',
-                                steps: ['Provision dedicated clean PC or Windows 365.', 'Restrict internet access.', 'Use CA policies to allow admin portal access only from SAW.'] 
-                            }
+                            { text: 'Use Modern Auth (SAML/OIDC)', why: 'Legacy is insecure.', guide: 'Apps must use OAuth2/OIDC.', steps: ['Inventory legacy apps.', 'Disable Legacy Auth in CA.'] },
+                            { text: 'Deploy Secure Workstations (SAW)', why: 'Protect admins.', guide: 'Admins use hardened devices.', steps: ['Provision dedicated admin PC.'] }
                         ]
                     },
                     human: {
                         label: 'Human Identity Management',
-                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices#human-identity-provisioning',
+                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
                         checklist: [
-                            { 
-                                text: 'No Standing Access (Use PIM)', 
-                                why: 'Reduces attack surface.', 
-                                guide: 'Admins should not have permanent privileges. Use Privileged Identity Management (PIM) for JIT access.',
-                                caution: 'PIM requires Entra ID P2 license.',
-                                steps: ['Entra > Identity Governance > PIM.', 'Change Admin roles from "Permanent" to "Eligible".', 'Configure approval workflows.'] 
-                            },
-                            { 
-                                text: 'Phishing-Resistant MFA for Admins', 
-                                why: 'Defends against AiTM attacks.', 
-                                guide: 'Enforce FIDO2 keys or Certificate-based auth for Global Admins.',
-                                caution: 'Requires hardware keys (YubiKey) or compatible devices.',
-                                steps: ['Authentication Methods > FIDO2.', 'Target Admin groups.', 'Enforce via CA Strength policy.'] 
-                            },
-                            { 
-                                text: 'Limit Global Admins (2-4 Max)', 
-                                why: 'Minimizes blast radius.', 
-                                guide: 'Only 2-4 trusted individuals should hold Global Admin. Others should use least-privilege roles.',
-                                caution: 'Having only 1 GA is a lockout risk; having >5 is a security risk.',
-                                steps: ['Review Global Admin role assignments.', 'Downgrade unnecessary users to specific roles (e.g., Exchange Admin, User Admin).'] 
-                            }
-                        ]
-                    },
-                    nonhuman: {
-                        label: 'Non-Human Identity',
-                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices#nonhuman-identity-provisioning',
-                        checklist: [
-                            { 
-                                text: 'Use Managed Identities', 
-                                why: 'Eliminates credential theft.', 
-                                guide: 'Use System/User Assigned Managed Identities for Azure resources instead of Service Principals with secrets.',
-                                caution: 'Only works for Azure resources; not for on-prem apps.',
-                                steps: ['Azure Resource > Identity > Enable System Assigned.', 'Grant RBAC to this identity.'] 
-                            },
-                            { 
-                                text: 'Workload Identity Federation', 
-                                why: 'Removes long-lived secrets.', 
-                                guide: 'Use OIDC federation for GitHub Actions or Kubernetes instead of client secrets.',
-                                caution: 'Requires configuring trust relationship.',
-                                steps: ['App Registration > Certificates & secrets > Federated credentials.', 'Configure OIDC issuer.'] 
-                            }
+                            { text: 'No Standing Access (PIM)', why: 'Zero Trust.', guide: 'JIT access for admins.', steps: ['Configure PIM.', 'Remove permanent roles.'] },
+                            { text: 'Phishing-Resistant MFA', why: 'Anti-AiTM.', guide: 'FIDO2 for Admins.', steps: ['Enable FIDO2 keys.', 'Enforce via CA.'] }
                         ]
                     },
                     ops: {
                         label: 'Governance & Operations',
-                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices#operations',
+                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
                         checklist: [
-                            { 
-                                text: 'Break Glass Accounts (Emergency)', 
-                                why: 'Prevents tenant lockout.', 
-                                guide: 'Create 2 cloud-only Global Admin accounts, excluded from ALL CA policies.',
-                                caution: 'Must be monitored closely. Trigger alerts if used.',
-                                steps: ['Create user (e.g., admin-emerg@domain).', 'Assign Global Admin.', 'Exclude from CA policies.', 'Store password in physical safe.'] 
-                            },
-                            { 
-                                text: 'Monitor Audit & Sign-in Logs', 
-                                why: 'Detects anomalies.', 
-                                guide: 'Stream logs to Log Analytics or Sentinel for threat detection.',
-                                caution: 'Retention period is limited without external storage.',
-                                steps: ['Entra > Diagnostic settings.', 'Stream to Log Analytics/Sentinel.'] 
-                            }
+                            { text: 'Break Glass Accounts', why: 'Emergency access.', guide: '2 Cloud-only GAs.', steps: ['Create user.', 'Exclude from CA.', 'Monitor sign-ins.'] },
+                            { text: 'Analyze Group Usage', why: 'Prevent impact.', guide: 'Use Group Analyzer tool.', steps: ['Run Group Analyzer script.', 'Check dependencies before delete.'] }
                         ]
                     }
                 },
@@ -357,7 +296,7 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
 
                 openModal() { this.showModal = true; },
                 reset() { if(confirm('Reset?')) this.report = { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' }; },
-                addPlan() { this.report.projectPlan = "Phase 1: Hardening (Week 1)\n- Create Break Glass Accounts\n- Enforce MFA for Admins\n\nPhase 2: Modernization (Month 1)\n- Migrate Apps to Modern Auth\n- Enable PIM for Roles\n\nPhase 3: Optimization\n- Deploy Passwordless\n- Continuous Access Evaluation"; },
+                addPlan() { this.report.projectPlan = "Phase 1: Analysis (Week 1)\n- Run Group Analyzer Tool\n- Inventory Legacy Apps\n\nPhase 2: Hardening (Month 1)\n- Deploy PIM for Roles\n- Enforce FIDO2 for Admins\n\nPhase 3: Cleanup (Month 2)\n- Remove unused groups based on analysis"; },
 
                 printReport() {
                     setTimeout(() => {
@@ -377,5 +316,3 @@ Copy โค้ดนี้ไปทับไฟล์ `index.html` ได้เ�
     </script>
 </body>
 </html>
-
-```
