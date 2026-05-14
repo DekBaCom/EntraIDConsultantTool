@@ -135,7 +135,6 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Toggle Dark Mode
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -143,6 +142,15 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('entraops-completed');
+    if (saved) setCompletedItems(new Set(JSON.parse(saved)));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('entraops-completed', JSON.stringify([...completedItems]));
+  }, [completedItems]);
 
   // Derived State
   const allItems = useMemo(() =>
@@ -255,7 +263,7 @@ export default function App() {
             />
             <StatCard
               title="Critical Actions"
-              value={stats.incomplete.length}
+              value={stats.incompleteList.length}
               subtext="High Priority"
               icon={AlertTriangle}
               delay={0.2}
@@ -295,16 +303,22 @@ export default function App() {
                   transition={{ delay: 0.1 * idx, duration: 0.5 }}
                   className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group"
                 >
-                  <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-slate-200/50 dark:bg-slate-800 rounded-xl group-hover:scale-110 group-hover:bg-brand-blue/10 group-hover:text-brand-blue transition-all duration-300">
-                        <CatIcon className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-brand-blue" />
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-slate-200/50 dark:bg-slate-800 rounded-xl group-hover:scale-110 group-hover:bg-brand-blue/10 group-hover:text-brand-blue transition-all duration-300">
+                          <CatIcon className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-brand-blue" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-slate-900 dark:text-white">{category.title}</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{category.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white">{category.title}</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{category.description}</p>
-                      </div>
+                      <span className="text-xs font-semibold text-brand-blue bg-brand-blue/10 px-2.5 py-1 rounded-full shrink-0">
+                        {category.items.filter(i => completedItems.has(i.id)).length}/{category.items.length}
+                      </span>
                     </div>
+                    <ProgressBar progress={category.items.length === 0 ? 0 : (category.items.filter(i => completedItems.has(i.id)).length / category.items.length) * 100} />
                   </div>
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
