@@ -3,316 +3,877 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure Entra ID Consultant Tool</title>
-    
+    <title>Entra ID Implementation Checklist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['Prompt', 'sans-serif'],
-                        print: ['Sarabun', 'sans-serif'] 
-                    },
-                    colors: { msBlue: '#0078D4', msDark: '#004578', msGray: '#f3f2f1' }
+                    fontFamily: { sans: ['Prompt', 'sans-serif'], print: ['Sarabun', 'sans-serif'] },
+                    colors: { msBlue: '#0078D4', msDark: '#004578' }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #334155; }
-        .check-item input:checked + span { text-decoration: line-through; color: #94a3b8; }
+        body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         [x-cloak] { display: none !important; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.07); }
+        .glow-blue { box-shadow: 0 0 20px rgba(0,120,212,0.35); }
+        .code-block { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 11px; }
 
-        /* --- PRINT STYLES --- */
         @media print {
             @page { size: A4; margin: 0; }
-            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Sarabun', sans-serif; width: 100%; font-size: 10pt; color: #1e293b; }
-            nav, .hero-section, main, .floating-btn, .modal-ui, .no-print { display: none !important; }
+            body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Sarabun', sans-serif !important; font-size: 10pt; color: #1e293b !important; }
+            nav, main, .no-print { display: none !important; }
             #print-template { display: block !important; }
-            .print-page { width: 210mm; min-height: 297mm; padding: 15mm 20mm; margin: 0 auto; background: white; position: relative; page-break-after: always; }
-            .report-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0078D4; padding-bottom: 15px; margin-bottom: 25px; }
-            .header-title h1 { font-size: 22pt; font-weight: bold; color: #004578; margin: 0; line-height: 1.1; }
-            .score-section { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 25px; margin-bottom: 25px; page-break-inside: avoid; }
-            .score-chart-wrapper { width: 140px; height: 140px; position: relative; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
-            #printChart { width: 140px !important; height: 140px !important; }
-            .rec-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #0078D4; padding: 15px 20px; border-radius: 6px; margin-bottom: 25px; page-break-inside: avoid; }
-            .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 25px; }
-            .list-box { border-top: 4px solid; padding-top: 10px; }
-            .list-box.strength { border-color: #10b981; }
-            .list-box.gaps { border-color: #ef4444; }
-            .check-list li { padding: 6px 0; border-bottom: 1px dashed #e2e8f0; display: flex; align-items: flex-start; font-size: 9.5pt; line-height: 1.4; }
-            .report-footer { position: absolute; bottom: 12mm; left: 0; right: 0; text-align: center; font-size: 8pt; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; margin: 0 20mm; }
+            .print-page { width: 210mm; min-height: 297mm; padding: 15mm 20mm; margin: 0 auto; background: white; position: relative; }
         }
         #print-template { display: none; }
     </style>
 </head>
-<body x-data="app()">
+<body x-data="app()" class="min-h-screen">
 
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 no-print">
+    <!-- NAV -->
+    <nav class="sticky top-0 z-40 border-b border-slate-800/60 glass no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="bg-msBlue text-white p-1.5 rounded"><i class="fa-brands fa-microsoft text-xl"></i></div>
-                <span class="font-bold text-lg text-slate-700">Entra ID <span class="text-msBlue">Consultant Tool</span></span>
+                <div class="w-9 h-9 bg-msBlue rounded-xl flex items-center justify-center glow-blue shrink-0">
+                    <i class="fa-brands fa-microsoft text-white text-lg"></i>
+                </div>
+                <div class="leading-tight">
+                    <span class="font-bold text-white text-lg">Entra ID</span>
+                    <span class="text-msBlue font-bold text-lg"> Implementation</span>
+                    <span class="ml-2 text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded-full align-middle">Checklist</span>
+                </div>
             </div>
-            <div class="text-sm text-slate-500">v4.2 Group Analyzer</div>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-slate-400 hidden sm:block">
+                    <span class="text-white font-bold" x-text="completedCount"></span>
+                    <span x-text="'/' + totalCount + ' completed'"></span>
+                </span>
+                <button @click="reset()" class="p-2 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-900/20" title="Reset progress">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button @click="openModal()" class="px-4 py-2 bg-msBlue hover:bg-msDark text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 glow-blue">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span class="hidden sm:inline">Generate Report</span>
+                </button>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print">
-        
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold flex items-center text-slate-800">
-                    <i class="fa-solid fa-list-check text-msBlue mr-2"></i> Audit & Tools
-                </h2>
-                <a :href="currentTabInfo.link" target="_blank" class="text-xs text-msBlue hover:underline bg-blue-50 px-3 py-1 rounded-full border border-blue-100 transition-colors">
-                    <i class="fa-solid fa-external-link-alt mr-1"></i> Open Resource
-                </a>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 no-print">
+
+        <!-- HERO: Overall Progress -->
+        <div class="glass rounded-2xl p-6">
+            <div class="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                <div class="flex-1">
+                    <h1 class="text-2xl font-bold text-white mb-1">Implementation Progress</h1>
+                    <p class="text-slate-400 text-sm mb-5">Track your Entra ID deployment across all 4 phases</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <template x-for="(phase, idx) in phases" :key="phase.id">
+                            <div @click="activePhase = phase.id; selectedItem = null"
+                                 class="rounded-xl p-3 border cursor-pointer transition-all"
+                                 :class="activePhase === phase.id
+                                     ? 'border-msBlue/50 bg-msBlue/10'
+                                     : 'border-slate-700/50 bg-slate-800/40 hover:border-slate-600'">
+                                <div class="text-xs text-slate-500 mb-0.5" x-text="'Phase ' + (idx+1)"></div>
+                                <div class="text-white font-semibold text-sm truncate" x-text="phase.label"></div>
+                                <div class="mt-2 bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                    <div class="bg-msBlue h-1.5 rounded-full transition-all duration-700"
+                                         :style="'width:' + phaseProgress(phase.id) + '%'"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1.5 flex justify-between">
+                                    <span x-text="phaseCompleted(phase.id) + '/' + phaseTotal(phase.id)"></span>
+                                    <span class="text-msBlue font-medium" x-text="phaseProgress(phase.id) + '%'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="relative w-32 h-32 shrink-0 mx-auto md:mx-0">
+                    <canvas id="overallChart" width="128" height="128"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div class="text-3xl font-bold text-white" x-text="overallProgress + '%'"></div>
+                        <div class="text-xs text-slate-400 mt-0.5">Overall</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="flex overflow-x-auto gap-2 mb-6 pb-2 border-b custom-scroll">
-                <template x-for="tab in tabs" :key="tab.id">
-                    <button @click="activeTab = tab.id; highlightedItem = null;" 
-                        :class="activeTab === tab.id ? 'bg-msBlue text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" 
-                        class="px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
-                        <i :class="tab.icon"></i> <span x-text="tab.label"></span>
+        </div>
+
+        <!-- PHASE TABS + CONTENT -->
+        <div class="glass rounded-2xl overflow-hidden">
+
+            <!-- Tab Bar -->
+            <div class="flex overflow-x-auto custom-scroll border-b border-slate-800/70 bg-slate-900/30">
+                <template x-for="(phase, idx) in phases" :key="phase.id">
+                    <button @click="activePhase = phase.id; selectedItem = null"
+                        class="flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all border-b-2 shrink-0"
+                        :class="activePhase === phase.id
+                            ? 'border-msBlue text-white bg-msBlue/10'
+                            : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'">
+                        <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0"
+                              :class="activePhase === phase.id ? 'bg-msBlue text-white' : 'bg-slate-700 text-slate-400'"
+                              x-text="idx + 1"></span>
+                        <span x-text="phase.label"></span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold"
+                              :class="phaseProgress(phase.id) === 100
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : 'bg-slate-700/80 text-slate-400'"
+                              x-text="phaseCompleted(phase.id) + '/' + phaseTotal(phase.id)"></span>
                     </button>
                 </template>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <template x-for="(item, index) in currentTabInfo.checklist" :key="index">
-                        <div @click="highlightedItem = item" 
-                             class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all h-full"
-                             :class="[
-                                report.steps.includes(item.text) ? 'border-green-200 bg-green-50' : 'border-slate-200 hover:border-msBlue hover:shadow-sm',
-                                highlightedItem === item ? 'ring-2 ring-msBlue ring-offset-1' : ''
-                             ]">
-                            <div class="pt-1" @click.stop>
-                                <input type="checkbox" :value="item.text" x-model="report.steps" 
-                                       class="w-5 h-5 text-msBlue rounded border-slate-300 focus:ring-msBlue cursor-pointer">
-                            </div>
-                            <div class="flex-1">
-                                <span class="text-sm font-semibold text-slate-700 block" x-text="item.text"></span>
-                                <span class="text-xs text-slate-500 block mt-1 leading-snug" x-text="item.why"></span>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-xs text-slate-400 mt-1"></i>
+            <!-- Tab Content -->
+            <template x-for="phase in phases" :key="phase.id">
+                <div x-show="activePhase === phase.id" class="p-6">
+                    <div class="flex items-start justify-between mb-5">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i :class="phase.icon + ' text-msBlue text-base'"></i>
+                                <span x-text="phase.title"></span>
+                            </h2>
+                            <p class="text-sm text-slate-400 mt-1" x-text="phase.description"></p>
                         </div>
-                    </template>
-                </div>
-
-                <div class="lg:col-span-1 bg-slate-50 border border-slate-200 rounded-xl p-5 sticky top-24 h-fit">
-                    <div x-show="!highlightedItem" class="text-center py-10 text-slate-400">
-                        <i class="fa-solid fa-laptop-code text-4xl mb-3 opacity-50"></i>
-                        <p class="text-sm">Select an item to view<br>details & usage guide.</p>
+                        <a :href="phase.link" target="_blank"
+                           class="text-xs text-msBlue hover:underline bg-msBlue/10 px-3 py-1.5 rounded-lg border border-msBlue/20 whitespace-nowrap items-center gap-1.5 hidden sm:flex">
+                            <i class="fa-solid fa-book-open text-xs"></i> MS Docs
+                        </a>
                     </div>
 
-                    <div x-show="highlightedItem" x-transition.opacity>
-                        <h3 class="font-bold text-lg text-slate-800 mb-4 border-b pb-2" x-text="highlightedItem?.text"></h3>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <div class="text-xs font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-info-circle mr-1"></i> Description</div>
-                                <p class="text-sm text-slate-600 leading-relaxed bg-white p-3 rounded border border-blue-100" x-text="highlightedItem?.guide"></p>
-                            </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <!-- Checklist -->
+                        <div class="lg:col-span-2 space-y-2.5">
+                            <template x-for="item in phase.items" :key="item.id">
+                                <div @click="selectedItem = item"
+                                     class="flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all"
+                                     :class="[
+                                        completedIds.includes(item.id)
+                                            ? 'border-green-900/40 bg-green-950/20'
+                                            : 'border-slate-700/50 bg-slate-800/30 hover:border-msBlue/40 hover:bg-msBlue/5',
+                                        selectedItem && selectedItem.id === item.id ? 'ring-1 ring-msBlue' : ''
+                                     ]">
+                                    <div @click.stop class="pt-0.5 shrink-0">
+                                        <input type="checkbox" :value="item.id" x-model="completedIds"
+                                               @change="saveProgress()"
+                                               class="w-5 h-5 rounded border-slate-600 bg-slate-800 text-msBlue focus:ring-msBlue cursor-pointer">
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <span class="text-sm font-semibold leading-snug"
+                                                  :class="completedIds.includes(item.id) ? 'line-through text-slate-500' : 'text-white'"
+                                                  x-text="item.text"></span>
+                                            <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0 mt-0.5 border"
+                                                  :class="item.required
+                                                      ? 'bg-red-900/30 text-red-400 border-red-800/30'
+                                                      : 'bg-slate-700/40 text-slate-400 border-slate-600/30'"
+                                                  x-text="item.required ? 'Required' : 'Optional'"></span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 mt-1 leading-relaxed" x-text="item.why"></p>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-600 mt-1 shrink-0"></i>
+                                </div>
+                            </template>
+                        </div>
 
-                            <div>
-                                <div class="text-xs font-bold text-green-600 uppercase mb-1"><i class="fa-solid fa-terminal mr-1"></i> Usage / Steps</div>
-                                <ol class="list-decimal pl-4 text-sm text-slate-600 space-y-1 bg-white p-3 rounded border border-slate-200">
-                                    <template x-for="step in highlightedItem?.steps">
-                                        <li class="pl-1 leading-snug"><span x-text="step"></span></li>
-                                    </template>
-                                </ol>
+                        <!-- Detail Panel -->
+                        <div class="rounded-xl border border-slate-700/50 bg-slate-800/30 p-5 sticky top-24 h-fit">
+                            <div x-show="!selectedItem" class="text-center py-14 text-slate-600">
+                                <i class="fa-solid fa-circle-info text-3xl mb-3 opacity-30 block"></i>
+                                <p class="text-sm">Select an item to view<br>steps &amp; commands</p>
                             </div>
-                            
-                            <div x-show="activeTab === 'tools'" class="mt-4">
-                                <a :href="currentTabInfo.link" target="_blank" class="block w-full text-center py-2 bg-slate-800 text-white rounded-lg text-sm hover:bg-slate-900 transition-colors">
-                                    <i class="fa-brands fa-github mr-2"></i> View on GitHub
-                                </a>
+                            <div x-show="selectedItem" x-transition.opacity class="space-y-4">
+                                <div>
+                                    <h3 class="font-bold text-white text-sm leading-snug mb-1" x-text="selectedItem?.text"></h3>
+                                    <p class="text-xs text-msBlue pb-3 border-b border-slate-700" x-text="selectedItem?.why"></p>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-list-ol text-msBlue"></i> Steps
+                                    </div>
+                                    <ol class="space-y-2">
+                                        <template x-for="(step, i) in selectedItem?.steps || []">
+                                            <li class="flex gap-2 text-xs text-slate-300 leading-relaxed">
+                                                <span class="text-msBlue font-bold shrink-0 w-4" x-text="(i+1) + '.'"></span>
+                                                <span x-text="step"></span>
+                                            </li>
+                                        </template>
+                                    </ol>
+                                </div>
+                                <div x-show="selectedItem?.cmd">
+                                    <div class="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-terminal text-green-500"></i> Command / Script
+                                    </div>
+                                    <div class="code-block p-3 overflow-x-auto custom-scroll">
+                                        <pre class="text-green-400 text-xs whitespace-pre leading-relaxed" x-text="selectedItem?.cmd"></pre>
+                                    </div>
+                                </div>
+                                <div x-show="selectedItem?.note" class="bg-yellow-900/20 border border-yellow-800/30 rounded-lg p-3">
+                                    <div class="text-xs font-bold text-yellow-500 mb-1 flex items-center gap-1">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> Note
+                                    </div>
+                                    <p class="text-xs text-yellow-300/80 leading-relaxed" x-text="selectedItem?.note"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="flex justify-end gap-4 sticky bottom-6">
-            <button @click="reset()" class="px-6 py-3 bg-white border border-red-200 text-red-500 rounded-xl hover:bg-red-50 font-medium shadow-sm transition-transform hover:scale-105">
-                <i class="fa-solid fa-trash-can mr-2"></i> Reset
-            </button>
-            <button @click="openModal()" class="px-8 py-3 bg-msBlue text-white rounded-xl font-bold hover:bg-msDark shadow-lg shadow-blue-500/30 flex items-center gap-2 transform transition hover:scale-105">
-                <i class="fa-solid fa-file-contract"></i> Generate Report
-            </button>
+            </template>
         </div>
     </main>
 
-    <div x-show="showModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 modal-ui" x-cloak x-transition.opacity>
-        <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
-            <div class="bg-white px-8 py-5 border-b flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-slate-800">Report Generator</h2>
-                <button @click="showModal = false" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- REPORT MODAL -->
+    <div x-show="showModal" x-cloak x-transition.opacity
+         class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-contract text-msBlue"></i> Implementation Report
+                </h2>
+                <button @click="showModal = false" class="text-slate-500 hover:text-white transition-colors p-1 rounded">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <div class="p-8 overflow-y-auto flex-1 bg-slate-50">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-6">
-                        <div class="bg-white p-5 rounded-xl border shadow-sm">
-                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">1. General Info</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-xs font-bold text-slate-500 uppercase">Ticket ID</label><input type="text" x-model="report.ticketId" class="w-full border rounded p-2 text-sm mt-1"></div>
-                                <div><label class="text-xs font-bold text-slate-500 uppercase">Engineer</label><input type="text" x-model="report.engineer" class="w-full border rounded p-2 text-sm mt-1"></div>
+            <div class="p-6 overflow-y-auto flex-1 custom-scroll">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-4">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <h3 class="font-semibold text-white text-sm mb-3 pb-2 border-b border-slate-700">Project Info</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-slate-500 block mb-1">Ticket / Project ID</label>
+                                    <input type="text" x-model="report.ticketId" placeholder="PROJ-001"
+                                           class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-msBlue focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 block mb-1">Engineer</label>
+                                    <input type="text" x-model="report.engineer" placeholder="Your name"
+                                           class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-msBlue focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 block mb-1">Customer / Tenant</label>
+                                    <input type="text" x-model="report.customer" placeholder="customer.com"
+                                           class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-msBlue focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 block mb-1">Date</label>
+                                    <input type="date" x-model="report.date"
+                                           class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white focus:ring-1 focus:ring-msBlue focus:outline-none">
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl border shadow-sm">
-                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">2. Recommendation</h3>
-                            <textarea x-model="report.recommendations" class="w-full h-24 p-3 border rounded text-sm bg-blue-50/50 resize-none"></textarea>
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <h3 class="font-semibold text-white text-sm mb-3 pb-2 border-b border-slate-700">Notes / Recommendations</h3>
+                            <textarea x-model="report.notes" rows="5" placeholder="Add consultant notes or recommendations..."
+                                      class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-msBlue focus:outline-none resize-none"></textarea>
                         </div>
                     </div>
-                    <div class="space-y-6">
-                        <div class="bg-white p-5 rounded-xl border shadow-sm">
-                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">3. Critical Gaps</h3>
-                            <textarea x-model="report.painPoints" class="w-full h-24 p-3 border border-red-200 bg-red-50/30 rounded text-sm resize-none"></textarea>
+                    <div class="space-y-4">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <h3 class="font-semibold text-white text-sm mb-3 pb-2 border-b border-slate-700">Remaining / Blockers</h3>
+                            <textarea x-model="report.remaining" rows="4" placeholder="List pending items or blockers..."
+                                      class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-msBlue focus:outline-none resize-none"></textarea>
                         </div>
-                        <div class="bg-white p-5 rounded-xl border shadow-sm">
-                            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">4. Roadmap</h3>
-                            <textarea x-model="report.projectPlan" class="w-full h-32 p-3 border border-green-200 bg-green-50/30 rounded text-sm font-mono resize-none"></textarea>
-                            <button @click="addPlan()" class="text-xs text-green-600 underline mt-1">Auto-Generate Plan</button>
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <h3 class="font-semibold text-white text-sm mb-3 pb-2 border-b border-slate-700">Next Steps / Roadmap</h3>
+                            <textarea x-model="report.roadmap" rows="5" placeholder="Roadmap..."
+                                      class="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 text-sm text-white font-mono placeholder-slate-500 focus:ring-1 focus:ring-msBlue focus:outline-none resize-none"></textarea>
+                            <button @click="autoRoadmap()" class="text-xs text-msBlue hover:underline mt-2 flex items-center gap-1">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Auto-generate from progress
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="p-5 border-t bg-white flex justify-end gap-3">
-                <button @click="showModal = false" class="px-6 py-2 rounded text-slate-500 hover:bg-slate-50">Cancel</button>
-                <button @click="printReport()" class="px-8 py-2 bg-msBlue text-white rounded-lg font-bold hover:bg-msDark shadow-lg flex items-center gap-2">
-                    <i class="fa-solid fa-print"></i> Print Report
+            <div class="p-4 border-t border-slate-800 flex justify-end gap-3 shrink-0">
+                <button @click="showModal = false" class="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors">Cancel</button>
+                <button @click="printReport()" class="px-6 py-2 bg-msBlue hover:bg-msDark text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 glow-blue">
+                    <i class="fa-solid fa-print"></i> Print PDF
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- PRINT TEMPLATE -->
     <div id="print-template">
-        <div class="print-page">
-            <div class="report-header">
-                <div class="header-title"><h1>Security Assessment Report</h1><p>Microsoft Entra ID Architecture Review</p></div>
-                <div class="header-meta"><p><strong>Date:</strong> <span x-text="new Date().toLocaleDateString('th-TH')"></span></p><p><strong>Ref:</strong> <span x-text="report.ticketId || '-'"></span></p></div>
+        <div class="print-page" style="font-family:'Sarabun',sans-serif;color:#1e293b;padding:15mm 20mm;background:white;position:relative;min-height:297mm;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0078D4;padding-bottom:12px;margin-bottom:20px;">
+                <div>
+                    <div style="font-size:20pt;font-weight:bold;color:#004578;">Entra ID Implementation Report</div>
+                    <div style="font-size:10pt;color:#64748b;margin-top:3px;">Microsoft Entra ID Deployment Checklist</div>
+                </div>
+                <div style="text-align:right;font-size:9pt;color:#475569;line-height:1.6;">
+                    <div><strong>Date:</strong> <span x-text="report.date || new Date().toLocaleDateString('th-TH')"></span></div>
+                    <div><strong>Ref:</strong> <span x-text="report.ticketId || '-'"></span></div>
+                    <div><strong>Engineer:</strong> <span x-text="report.engineer || '-'"></span></div>
+                    <div><strong>Customer:</strong> <span x-text="report.customer || '-'"></span></div>
+                </div>
             </div>
-            <div class="score-section">
-                <div class="score-text">
-                    <h3 class="text-lg font-bold text-slate-800">1. Security Score</h3>
-                    <p class="text-sm text-slate-500">Based on Microsoft Entra best practices.</p>
-                    <div class="flex gap-6 mt-2">
-                        <div><div class="text-2xl font-bold text-slate-700" x-text="report.steps.length"></div><div class="text-[10px] uppercase text-slate-400 font-bold">Passed</div></div>
-                        <div><div class="text-2xl font-bold text-danger" x-text="totalItems - report.steps.length"></div><div class="text-[10px] uppercase text-slate-400 font-bold">Gaps</div></div>
+
+            <div style="display:flex;align-items:center;gap:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
+                <div style="width:90px;height:90px;position:relative;flex-shrink:0;">
+                    <canvas id="printChart" width="90" height="90"></canvas>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <div style="font-size:16pt;font-weight:bold;color:#0078D4;" x-text="overallProgress + '%'"></div>
                     </div>
                 </div>
-                <div class="score-chart-wrapper"><canvas id="printChart" width="140" height="140"></canvas><div class="score-value" x-text="Math.round((report.steps.length / totalItems) * 100) + '%'"></div></div>
+                <div style="flex:1;">
+                    <div style="font-size:13pt;font-weight:bold;color:#1e293b;margin-bottom:8px;">Overall Progress</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                        <template x-for="(phase, idx) in phases">
+                            <div style="font-size:9pt;color:#475569;">
+                                <strong x-text="'Phase '+(idx+1)+': '+phase.label"></strong>
+                                — <span x-text="phaseCompleted(phase.id)+'/'+phaseTotal(phase.id)+' ('+phaseProgress(phase.id)+'%)'"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
-            <div class="section-title text-msBlue mb-2 font-bold"><i class="fa-solid fa-star"></i> 2. Recommended Solution</div>
-            <div class="rec-box"><div style="white-space: pre-wrap; font-weight: 500;" x-text="report.recommendations"></div></div>
-            <div class="comparison-grid">
-                <div><div class="section-title text-success font-bold mb-2"><i class="fa-solid fa-check-circle"></i> 3. Current Strength</div><div class="list-box strength"><ul class="check-list"><template x-for="step in report.steps"><li><i class="fa-solid fa-check text-success"></i> <span x-text="step"></span></li></template></ul></div></div>
-                <div><div class="section-title text-danger font-bold mb-2"><i class="fa-solid fa-triangle-exclamation"></i> 4. Critical Gaps</div><div class="list-box gaps"><ul class="check-list"><template x-for="line in report.painPoints.split('\n')"><li x-show="line.trim()"><i class="fa-solid fa-xmark text-danger"></i> <span x-text="line"></span></li></template></ul></div></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px;">
+                <div>
+                    <div style="font-size:11pt;font-weight:bold;color:#107C10;border-bottom:2px solid #107C10;padding-bottom:5px;margin-bottom:8px;">
+                        <i class="fa-solid fa-check-circle"></i> Completed Items (<span x-text="completedCount"></span>)
+                    </div>
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <template x-for="phase in phases">
+                            <template x-for="item in phase.items.filter(i => completedIds.includes(i.id))">
+                                <li style="padding:4px 0;border-bottom:1px dashed #e2e8f0;font-size:9pt;display:flex;gap:6px;align-items:flex-start;">
+                                    <span style="color:#107C10;font-weight:bold;flex-shrink:0;">✓</span>
+                                    <span x-text="item.text"></span>
+                                </li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+                <div>
+                    <div style="font-size:11pt;font-weight:bold;color:#A4262C;border-bottom:2px solid #A4262C;padding-bottom:5px;margin-bottom:8px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Pending Items (<span x-text="totalCount - completedCount"></span>)
+                    </div>
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <template x-for="phase in phases">
+                            <template x-for="item in phase.items.filter(i => !completedIds.includes(i.id))">
+                                <li style="padding:4px 0;border-bottom:1px dashed #e2e8f0;font-size:9pt;display:flex;gap:6px;align-items:flex-start;">
+                                    <span style="color:#A4262C;font-weight:bold;flex-shrink:0;">✗</span>
+                                    <span x-text="item.text"></span>
+                                </li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
             </div>
-            <div class="section-title text-slate-700 font-bold mb-2">5. Roadmap</div>
-            <div class="roadmap-box" x-text="report.projectPlan"></div>
-            <div class="report-footer">Confidential Security Assessment • Generated by Entra ID Expert Tool • &copy; 2026 Mr.Abdulloh Etae-ngoh</div>
+
+            <template x-if="report.notes">
+                <div style="background:#eff6ff;border-left:4px solid #0078D4;padding:10px 14px;border-radius:4px;margin-bottom:16px;font-size:9pt;">
+                    <div style="font-weight:bold;color:#0078D4;margin-bottom:4px;">Notes &amp; Recommendations</div>
+                    <div style="white-space:pre-wrap;" x-text="report.notes"></div>
+                </div>
+            </template>
+
+            <template x-if="report.roadmap">
+                <div style="font-size:9pt;">
+                    <div style="font-size:11pt;font-weight:bold;color:#1e293b;border-bottom:2px solid #e2e8f0;padding-bottom:5px;margin-bottom:8px;">Next Steps / Roadmap</div>
+                    <div style="white-space:pre-wrap;font-family:monospace;" x-text="report.roadmap"></div>
+                </div>
+            </template>
+
+            <div style="position:absolute;bottom:12mm;left:0;right:0;text-align:center;font-size:8pt;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:8px;margin:0 20mm;">
+                Confidential &bull; Generated by Entra ID Implementation Tool &bull; &copy; 2026 Mr.Abdulloh Etae-ngoh
+            </div>
         </div>
     </div>
 
     <script>
-        function app() {
-            return {
-                showModal: false, activeTab: 'tools', highlightedItem: null,
-                report: { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' },
-                
-                tabs: [
-                    { id: 'tools', label: 'Tools & Scripts', icon: 'fa-solid fa-toolbox' },
-                    { id: 'arch', label: 'Architecture', icon: 'fa-solid fa-shield-halved' },
-                    { id: 'human', label: 'Human Identity', icon: 'fa-solid fa-user-shield' },
-                    { id: 'ops', label: 'Governance', icon: 'fa-solid fa-file-contract' }
-                ],
-                
-                content: {
-                    tools: {
-                        label: 'Group & Policy Analysis Tools',
-                        link: 'https://github.com/jasperbaes/Microsoft-Cloud-Group-Analyzer',
-                        checklist: [
-                            { 
-                                text: 'Microsoft Cloud Group Analyzer', 
-                                why: 'Visualize group dependencies across all services.', 
-                                guide: 'A Node.js script that scans your tenant to find where Entra ID groups are used (CA Policies, Intune, Enterprise Apps, Roles). Helps prevent outages before deleting groups.',
-                                steps: [
-                                    'Pre-req: Install Node.js on your machine.',
-                                    'Clone Repo: git clone https://github.com/jasperbaes/Microsoft-Cloud-Group-Analyzer',
-                                    'Create App Registration in Entra ID (Read Permissions).',
-                                    'Run: npm install && npm start',
-                                    'View "webreport" output to see group usage map.'
-                                ]
-                            },
-                            {
-                                text: 'Entra Exporter (PowerShell)',
-                                why: 'Backup configuration as code.',
-                                guide: 'Export all Entra ID settings to JSON for backup or documentation.',
-                                steps: ['Install-Module EntraExporter', 'Connect-Entra', 'Export-Entra -Path ./Backup']
-                            }
-                        ]
-                    },
-                    arch: {
-                        label: 'Isolation & Principles',
-                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
-                        checklist: [
-                            { text: 'Use Modern Auth (SAML/OIDC)', why: 'Legacy is insecure.', guide: 'Apps must use OAuth2/OIDC.', steps: ['Inventory legacy apps.', 'Disable Legacy Auth in CA.'] },
-                            { text: 'Deploy Secure Workstations (SAW)', why: 'Protect admins.', guide: 'Admins use hardened devices.', steps: ['Provision dedicated admin PC.'] }
-                        ]
-                    },
-                    human: {
-                        label: 'Human Identity Management',
-                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
-                        checklist: [
-                            { text: 'No Standing Access (PIM)', why: 'Zero Trust.', guide: 'JIT access for admins.', steps: ['Configure PIM.', 'Remove permanent roles.'] },
-                            { text: 'Phishing-Resistant MFA', why: 'Anti-AiTM.', guide: 'FIDO2 for Admins.', steps: ['Enable FIDO2 keys.', 'Enforce via CA.'] }
-                        ]
-                    },
-                    ops: {
-                        label: 'Governance & Operations',
-                        link: 'https://learn.microsoft.com/en-us/entra/architecture/secure-best-practices',
-                        checklist: [
-                            { text: 'Break Glass Accounts', why: 'Emergency access.', guide: '2 Cloud-only GAs.', steps: ['Create user.', 'Exclude from CA.', 'Monitor sign-ins.'] },
-                            { text: 'Analyze Group Usage', why: 'Prevent impact.', guide: 'Use Group Analyzer tool.', steps: ['Run Group Analyzer script.', 'Check dependencies before delete.'] }
-                        ]
-                    }
+    function app() {
+        return {
+            activePhase: 'setup',
+            selectedItem: null,
+            showModal: false,
+            completedIds: JSON.parse(localStorage.getItem('entra-impl-v1') || '[]'),
+            report: {
+                ticketId: '', engineer: '', customer: '',
+                date: new Date().toISOString().split('T')[0],
+                notes: '', remaining: '', roadmap: ''
+            },
+
+            phases: [
+                {
+                    id: 'setup',
+                    label: 'Tenant Setup',
+                    title: 'Phase 1: Tenant Setup & Licensing',
+                    description: 'Configure foundational settings, licensing, and admin accounts.',
+                    icon: 'fa-solid fa-building',
+                    link: 'https://learn.microsoft.com/en-us/entra/fundamentals/get-started-what-is-entra',
+                    items: [
+                        {
+                            id: 'verify-license',
+                            text: 'Verify and assign Entra ID P1 / P2 licenses',
+                            why: 'P1 is required for Conditional Access; P2 adds PIM and ID Protection.',
+                            required: true,
+                            steps: [
+                                'Go to: Entra admin center > Billing > Licenses.',
+                                'Confirm you have Microsoft Entra ID P1 or P2 (or M365 E3/E5).',
+                                'Assign licenses to all users who need CA, PIM, or ID Protection.',
+                                'Verify license count is sufficient for user count.'
+                            ],
+                            cmd: '# Check assigned licenses via Graph PowerShell\nGet-MgSubscribedSku | Select SkuPartNumber, ConsumedUnits, PrepaidUnits',
+                            note: 'P2 is included in Microsoft 365 E5. P1 is in M365 E3 and Business Premium.'
+                        },
+                        {
+                            id: 'custom-domain',
+                            text: 'Add and verify custom domain',
+                            why: 'Users sign in as user@yourdomain.com instead of user@tenant.onmicrosoft.com.',
+                            required: true,
+                            steps: [
+                                'Go to: Entra admin center > Custom domain names > Add custom domain.',
+                                'Enter your domain name and click Add.',
+                                'Copy the TXT record value shown.',
+                                'In your DNS provider: add the TXT record.',
+                                'Wait for DNS propagation (1–60 min) then click Verify.',
+                                'Optionally: set as Primary domain.'
+                            ]
+                        },
+                        {
+                            id: 'admin-accounts',
+                            text: 'Create dedicated cloud-only admin accounts',
+                            why: 'Admin accounts must be separate from daily-use accounts and not synced from on-prem AD.',
+                            required: true,
+                            steps: [
+                                'Naming convention: admin_firstname@tenant.onmicrosoft.com',
+                                'Use the .onmicrosoft.com domain (NOT your custom domain).',
+                                'Enable MFA immediately on these accounts.',
+                                'Do NOT assign Exchange, Teams, or productivity licenses.',
+                                'Assign only the minimum required admin role (not Global Admin by default).'
+                            ],
+                            cmd: '# Create admin account\nNew-MgUser `\n  -DisplayName "Admin John" `\n  -UserPrincipalName "admin_john@contoso.onmicrosoft.com" `\n  -PasswordProfile @{Password="P@ssw0rd!Temp"; ForceChangePasswordNextSignIn=$true} `\n  -AccountEnabled $true'
+                        },
+                        {
+                            id: 'break-glass',
+                            text: 'Create 2 break-glass (emergency access) accounts',
+                            why: 'Prevents tenant lockout if MFA, SSO, or Conditional Access policies fail.',
+                            required: true,
+                            steps: [
+                                'Create 2 Global Admin accounts using .onmicrosoft.com UPN.',
+                                'Use strong randomly-generated 20+ character passwords.',
+                                'Store credentials in a physical safe (printed, offline).',
+                                'Exclude BOTH accounts from ALL Conditional Access policies.',
+                                'Monitor with Log Analytics alert: any sign-in from these accounts = security incident.'
+                            ],
+                            note: 'These accounts must NEVER be used for daily work. Any sign-in should trigger immediate investigation.'
+                        },
+                        {
+                            id: 'security-defaults',
+                            text: 'Disable Security Defaults before creating CA policies',
+                            why: 'Security Defaults and Conditional Access cannot coexist. Disabling SD is required before CA.',
+                            required: true,
+                            steps: [
+                                'Go to: Entra admin center > Overview > Properties.',
+                                'Click "Manage security defaults" at the bottom.',
+                                'Toggle to Disabled. Reason: "My organization uses Conditional Access".',
+                                'Click Save.',
+                                'Immediately create baseline CA policies to replace Security Defaults.'
+                            ],
+                            note: 'Do NOT disable Security Defaults unless you have CA policies ready. The tenant will be less secure during the gap.'
+                        }
+                    ]
                 },
-                
-                get currentTabInfo() { return this.content[this.activeTab]; },
-                get totalItems() { return Object.values(this.content).reduce((acc, c) => acc + c.checklist.length, 0); },
-
-                openModal() { this.showModal = true; },
-                reset() { if(confirm('Reset?')) this.report = { ticketId: '', engineer: '', steps: [], painPoints: '', recommendations: '', projectPlan: '' }; },
-                addPlan() { this.report.projectPlan = "Phase 1: Analysis (Week 1)\n- Run Group Analyzer Tool\n- Inventory Legacy Apps\n\nPhase 2: Hardening (Month 1)\n- Deploy PIM for Roles\n- Enforce FIDO2 for Admins\n\nPhase 3: Cleanup (Month 2)\n- Remove unused groups based on analysis"; },
-
-                printReport() {
-                    setTimeout(() => {
-                        const score = Math.round((this.report.steps.length / this.totalItems) * 100);
-                        const ctx = document.getElementById('printChart');
-                        if (window.myPrintChart) window.myPrintChart.destroy();
-                        window.myPrintChart = new Chart(ctx, {
-                            type: 'doughnut',
-                            data: { datasets: [{ data: [score, 100-score], backgroundColor: ['#0078D4', '#e2e8f0'], borderWidth: 0 }] },
-                            options: { responsive: false, cutout: '75%', animation: false, plugins: { tooltip: { enabled: false } } }
-                        });
-                        window.print();
-                    }, 500);
+                {
+                    id: 'identity',
+                    label: 'Users & Groups',
+                    title: 'Phase 2: Users, Groups & Identity Sync',
+                    description: 'Provision users, set up hybrid sync, and organize access with groups.',
+                    icon: 'fa-solid fa-users',
+                    link: 'https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/whatis-azure-ad-connect',
+                    items: [
+                        {
+                            id: 'ad-connect',
+                            text: 'Install and configure Microsoft Entra Connect (hybrid sync)',
+                            why: 'Syncs on-premises Active Directory users and groups to Entra ID for hybrid environments.',
+                            required: false,
+                            steps: [
+                                'Download Entra Connect from: https://aka.ms/AADConnect',
+                                'Install on a dedicated Windows Server (NOT a Domain Controller).',
+                                'Choose sync method: Password Hash Sync (recommended) or Pass-Through Auth.',
+                                'In "Domain/OU Filtering": select only required OUs (avoid syncing all objects).',
+                                'Complete wizard and verify sync in Entra admin center > Entra Connect.',
+                                'Run initial full sync after install.'
+                            ],
+                            cmd: '# Verify sync status\nGet-ADSyncConnectorRunStatus\n\n# Force a delta sync\nStart-ADSyncSyncCycle -PolicyType Delta\n\n# Force a full sync\nStart-ADSyncSyncCycle -PolicyType Initial',
+                            note: 'Skip this step for cloud-only tenants. Required only for hybrid AD environments.'
+                        },
+                        {
+                            id: 'phs',
+                            text: 'Enable Password Hash Sync + Seamless SSO',
+                            why: 'PHS provides redundant authentication and enables ID Protection risk signals from on-prem.',
+                            required: false,
+                            steps: [
+                                'In Entra Connect configuration: enable Password Hash Synchronization.',
+                                'Enable "Seamless Single Sign-On" for domain-joined machines.',
+                                'Verify in Entra admin center: Entra Connect > Password Hash Sync = Active.',
+                                'Test SSO from a domain-joined machine.'
+                            ],
+                            note: 'Even if using Pass-Through Auth, also enable PHS as a backup method.'
+                        },
+                        {
+                            id: 'sspr',
+                            text: 'Configure Self-Service Password Reset (SSPR)',
+                            why: 'Allows users to reset passwords without contacting the helpdesk. Reduces IT support costs.',
+                            required: true,
+                            steps: [
+                                'Go to: Entra admin center > Password reset > Properties.',
+                                'Enable SSPR for "All" users or a pilot group.',
+                                'Under Authentication methods: require 2 methods minimum.',
+                                'Enable: Mobile app notification + Email or Mobile phone.',
+                                'Under Registration: enable "Require users to register when signing in".',
+                                'Test SSPR at: https://aka.ms/sspr'
+                            ]
+                        },
+                        {
+                            id: 'dynamic-groups',
+                            text: 'Create dynamic groups for license and policy assignment',
+                            why: 'Auto-assigns licenses and access policies based on user attributes (department, jobTitle, etc).',
+                            required: false,
+                            steps: [
+                                'Go to: Groups > New Group > Membership type: Dynamic User.',
+                                'Build membership rule, e.g.: (user.department -eq "IT")',
+                                'Use "Validate Rules" to preview members before saving.',
+                                'Assign licenses or use groups in CA policy scope.',
+                                'Requires Entra ID P1 or above.'
+                            ],
+                            cmd: '# Create dynamic group\nNew-MgGroup `\n  -DisplayName "Dept-IT" `\n  -MailEnabled:$false `\n  -SecurityEnabled:$true `\n  -GroupTypes "DynamicMembership" `\n  -MembershipRule \'(user.department -eq "IT")\' `\n  -MembershipRuleProcessingState "On"'
+                        },
+                        {
+                            id: 'stale-cleanup',
+                            text: 'Audit and disable stale accounts before go-live',
+                            why: 'Accounts with no sign-in for 90+ days are security risks and should be cleaned up.',
+                            required: false,
+                            steps: [
+                                'Run PowerShell query to find accounts inactive for 90+ days.',
+                                'Export list and get manager approval before disabling.',
+                                'Disable (not delete) accounts first, delete after 30 days.',
+                                'Also review and clean up stale guest (B2B) accounts.'
+                            ],
+                            cmd: '# Find inactive users (no sign-in for 90+ days)\nGet-MgUser -All -Property DisplayName,UserPrincipalName,SignInActivity `\n| Where-Object { $_.SignInActivity.LastSignInDateTime -lt (Get-Date).AddDays(-90) } `\n| Select DisplayName, UserPrincipalName, {$_.SignInActivity.LastSignInDateTime}'
+                        }
+                    ]
+                },
+                {
+                    id: 'auth',
+                    label: 'MFA & CA',
+                    title: 'Phase 3: MFA, Conditional Access & App Integration',
+                    description: 'Enforce strong authentication and configure Zero Trust access policies.',
+                    icon: 'fa-solid fa-shield-halved',
+                    link: 'https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview',
+                    items: [
+                        {
+                            id: 'combined-reg',
+                            text: 'Enable combined MFA & SSPR registration experience',
+                            why: 'Single registration page so users set up both MFA and SSPR at once. Reduces helpdesk calls.',
+                            required: true,
+                            steps: [
+                                'Go to: Entra admin center > User settings > Manage user feature settings.',
+                                'Set "Users can use combined security information registration" to All.',
+                                'Direct users to register at: https://aka.ms/mysecurityinfo',
+                                'Send communication to all users with registration deadline.'
+                            ]
+                        },
+                        {
+                            id: 'block-legacy',
+                            text: 'Block legacy authentication via Conditional Access',
+                            why: 'Legacy protocols (SMTP, POP3, IMAP, Basic Auth) bypass MFA entirely and are exploited in most attacks.',
+                            required: true,
+                            steps: [
+                                'FIRST: In Sign-in logs, filter "Client app = Other clients" to find legacy auth usage.',
+                                'Create CA Policy: Name = "Block Legacy Authentication".',
+                                'Users: All users. Cloud apps: All cloud apps.',
+                                'Conditions > Client apps: check "Exchange ActiveSync clients" and "Other clients".',
+                                'Grant: Block access.',
+                                'Start in Report-Only mode for 7+ days before enforcing.'
+                            ],
+                            note: 'Verify no business-critical apps use legacy auth before enforcing. Common offenders: old printers, scanners, legacy SMTP relay.'
+                        },
+                        {
+                            id: 'mfa-all',
+                            text: 'Require MFA for all users via Conditional Access',
+                            why: 'MFA blocks over 99.9% of automated account compromise attacks.',
+                            required: true,
+                            steps: [
+                                'Create CA Policy: Name = "Require MFA – All Users".',
+                                'Users: All users. EXCLUDE your 2 break-glass accounts.',
+                                'Cloud apps: All cloud apps.',
+                                'Grant: Require multi-factor authentication.',
+                                'Enable Report-Only first. Review "What If" tool for impact.',
+                                'Enforce after monitoring for 7+ days with no critical issues.'
+                            ],
+                            note: 'Always exclude break-glass accounts. Never target them in MFA or blocking policies.'
+                        },
+                        {
+                            id: 'phishing-mfa',
+                            text: 'Enforce phishing-resistant MFA for all admins',
+                            why: 'SMS and TOTP MFA are vulnerable to AiTM (Adversary-in-the-Middle) phishing. Admins need FIDO2 or CBA.',
+                            required: true,
+                            steps: [
+                                'Go to: Protection > Authentication methods > Authentication strengths.',
+                                'Create custom strength: include only FIDO2 key, Windows Hello, or CBA.',
+                                'Create CA Policy: Name = "Admins – Require Phishing-Resistant MFA".',
+                                'Users: Select all admin directory roles.',
+                                'Grant: Require authentication strength > select your custom strength.',
+                                'Provision FIDO2 hardware keys for all admin accounts.'
+                            ],
+                            cmd: '# Issue Temporary Access Pass (TAP) to bootstrap FIDO2 registration\nNew-MgUserAuthenticationTemporaryAccessPassMethod `\n  -UserId "admin_john@contoso.onmicrosoft.com" `\n  -IsUsableOnce:$true'
+                        },
+                        {
+                            id: 'named-locations',
+                            text: 'Define Trusted Named Locations',
+                            why: 'Reduces MFA fatigue from known office IPs and enables location-based CA conditions.',
+                            required: false,
+                            steps: [
+                                'Go to: Protection > Conditional Access > Named locations.',
+                                'Create "Corporate Office" with your public IP ranges (CIDR notation).',
+                                'Create "VPN Gateway" with VPN egress IPs.',
+                                'Mark both as "Trusted".',
+                                'Reference in CA policies to skip MFA or allow access from trusted IPs.'
+                            ]
+                        },
+                        {
+                            id: 'sso-apps',
+                            text: 'Configure SSO for key enterprise applications',
+                            why: 'SSO centralizes access control, enables MFA enforcement, and removes app-specific passwords.',
+                            required: false,
+                            steps: [
+                                'Go to: Enterprise applications > New application.',
+                                'Search the gallery for your app (e.g. Salesforce, ServiceNow, Zoom).',
+                                'Configure SSO method: SAML or OIDC (per app documentation).',
+                                'Set Entity ID, Reply URL, and attribute/claims mapping.',
+                                'Assign users and groups to the application.',
+                                'Test via: https://myapps.microsoft.com',
+                                'Disable direct (non-SSO) login to the app when confirmed working.'
+                            ]
+                        },
+                        {
+                            id: 'app-consent',
+                            text: 'Disable user consent, require admin approval for apps',
+                            why: 'Prevents illicit consent grant attacks where users accidentally grant 3rd-party apps access to email/files.',
+                            required: true,
+                            steps: [
+                                'Go to: Enterprise apps > Consent and permissions > User consent settings.',
+                                'Set "User consent for apps" to: "Do not allow user consent".',
+                                'Enable Admin consent workflow: assign approvers (Security team).',
+                                'Go to: App registrations > API permissions and review existing consented scopes.',
+                                'Revoke suspicious or overly-broad permissions.'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'governance',
+                    label: 'Governance',
+                    title: 'Phase 4: Privileged Access & Governance',
+                    description: 'Implement least-privilege, monitoring, and ongoing governance controls.',
+                    icon: 'fa-solid fa-user-shield',
+                    link: 'https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-overview',
+                    items: [
+                        {
+                            id: 'pim-enable',
+                            text: 'Enable PIM and configure settings for all admin roles',
+                            why: 'PIM enforces Just-in-Time access — admins get elevated roles only when needed, for a limited time window.',
+                            required: true,
+                            steps: [
+                                'Go to: Entra admin center > Privileged Identity Management > Entra ID roles.',
+                                'For each role (start with Global Admin, Privileged Role Admin):',
+                                '  Settings: Max activation duration = 1-4 hours.',
+                                '  Enable "Require justification on activation".',
+                                '  Enable "Require MFA on activation".',
+                                '  Enable "Require approval" for Tier-0 roles.',
+                                'Convert all permanent role members (except break-glass) to "Eligible".',
+                                'Test: have an admin activate their role via PIM.'
+                            ],
+                            note: 'Requires Entra ID P2. Break-glass accounts should remain as permanent Global Admins.'
+                        },
+                        {
+                            id: 'pim-remove-permanent',
+                            text: 'Remove all permanent (standing) admin role assignments',
+                            why: 'Permanent roles are always active, reducing the window attackers have for lateral movement.',
+                            required: true,
+                            steps: [
+                                'In PIM > Entra ID roles > Assignments > Active assignments.',
+                                'Identify all permanent (not time-bound) role assignments.',
+                                'For each: change from "Active" to "Eligible" via PIM.',
+                                'Exception: keep break-glass accounts as permanent Global Admins.',
+                                'Verify no synced accounts hold permanent high-privilege roles.'
+                            ],
+                            cmd: '# List all permanent Global Admin assignments\nGet-MgRoleManagementDirectoryRoleAssignment `\n  -Filter "roleDefinitionId eq \'62e90394-69f5-4237-9190-012177145e10\'" `\n| Select PrincipalId, PrincipalType'
+                        },
+                        {
+                            id: 'id-protection',
+                            text: 'Configure Entra ID Protection risk policies',
+                            why: 'Automatically detects and responds to compromised accounts using Microsoft threat intelligence signals.',
+                            required: true,
+                            steps: [
+                                'Go to: Protection > Identity Protection.',
+                                'User risk policy: set High risk → "Require password change".',
+                                'Sign-in risk policy: set Medium+ risk → "Require MFA".',
+                                'MFA registration policy: enable for All users.',
+                                'Review the Risky users and Risky sign-ins reports weekly.',
+                                'Integrate alerts with your SIEM or email notification.'
+                            ],
+                            note: 'Requires Entra ID P2. For P1, use CA policies with User risk and Sign-in risk conditions instead.'
+                        },
+                        {
+                            id: 'access-reviews',
+                            text: 'Set up recurring Access Reviews for groups and roles',
+                            why: 'Automatically certifies and removes stale group memberships and role assignments on a schedule.',
+                            required: false,
+                            steps: [
+                                'Go to: ID Governance > Access reviews > New access review.',
+                                'Create review for: high-privilege security groups (quarterly).',
+                                'Create review for: Guest users (monthly or quarterly).',
+                                'Create review for: PIM eligible role assignments (quarterly).',
+                                'Set "If reviewers don\'t respond" → Remove access.',
+                                'Assign reviewers as managers or resource owners.'
+                            ]
+                        },
+                        {
+                            id: 'log-analytics',
+                            text: 'Stream Entra ID logs to Log Analytics Workspace',
+                            why: 'Required for 90+ day log retention, compliance auditing, and threat hunting via KQL.',
+                            required: true,
+                            steps: [
+                                'Create a Log Analytics Workspace in the Azure portal.',
+                                'Go to: Entra admin center > Monitoring > Diagnostic settings.',
+                                'Add diagnostic setting: enable SignInLogs and AuditLogs.',
+                                'Destination: Send to Log Analytics Workspace (select yours).',
+                                'Verify data in Log Analytics: run a test KQL query.',
+                                'Set workspace retention to 90+ days under Usage and estimated costs.'
+                            ],
+                            cmd: '// KQL: Check recent admin sign-ins to Azure Portal\nSigninLogs\n| where AppDisplayName == "Azure Portal"\n| where UserType == "Member"\n| project TimeGenerated, UserPrincipalName, IPAddress, ResultType, ConditionalAccessStatus\n| order by TimeGenerated desc\n| take 50'
+                        },
+                        {
+                            id: 'pim-alerts',
+                            text: 'Enable PIM alerts and email notifications',
+                            why: 'Get immediate notification when privileged roles are activated, assigned, or PIM thresholds are exceeded.',
+                            required: true,
+                            steps: [
+                                'In PIM > Alerts: review all default alerts and enable recommended ones.',
+                                'In PIM > Settings for each role: enable email on activation.',
+                                'Set notification recipients to the security team email.',
+                                'Test: activate a role and confirm notification email is received within 5 minutes.'
+                            ]
+                        },
+                        {
+                            id: 'entra-exporter',
+                            text: 'Export and document Entra ID configuration (baseline)',
+                            why: 'Creates a configuration backup and documentation baseline for disaster recovery and change tracking.',
+                            required: false,
+                            steps: [
+                                'Install the EntraExporter PowerShell module.',
+                                'Run Export-Entra to export all settings as JSON files.',
+                                'Store in a secure location (private Git repo or Azure Storage with private access).',
+                                'Schedule monthly exports and compare diff to detect unauthorized changes.'
+                            ],
+                            cmd: 'Install-Module EntraExporter -Scope CurrentUser\nConnect-Entra\nExport-Entra -Path ./EntraBackup\n\n# Optional: check diff after next export\nGet-ChildItem ./EntraBackup | ForEach-Object { git diff $_ }'
+                        }
+                    ]
                 }
+            ],
+
+            get completedCount() { return this.completedIds.length; },
+            get totalCount() { return this.phases.reduce((s, p) => s + p.items.length, 0); },
+            get overallProgress() {
+                return this.totalCount === 0 ? 0 : Math.round((this.completedCount / this.totalCount) * 100);
+            },
+
+            phaseCompleted(id) {
+                const p = this.phases.find(x => x.id === id);
+                return p ? p.items.filter(i => this.completedIds.includes(i.id)).length : 0;
+            },
+            phaseTotal(id) {
+                const p = this.phases.find(x => x.id === id);
+                return p ? p.items.length : 0;
+            },
+            phaseProgress(id) {
+                const t = this.phaseTotal(id);
+                return t === 0 ? 0 : Math.round((this.phaseCompleted(id) / t) * 100);
+            },
+
+            saveProgress() {
+                localStorage.setItem('entra-impl-v1', JSON.stringify(this.completedIds));
+                this.$nextTick(() => this.renderChart());
+            },
+
+            openModal() { this.showModal = true; },
+            reset() {
+                if (confirm('Reset all progress?')) {
+                    this.completedIds = [];
+                    localStorage.removeItem('entra-impl-v1');
+                    this.renderChart();
+                }
+            },
+
+            autoRoadmap() {
+                const lines = [];
+                this.phases.forEach((phase, i) => {
+                    const pending = phase.items.filter(item => !this.completedIds.includes(item.id));
+                    if (pending.length > 0) {
+                        lines.push(`Phase ${i+1}: ${phase.label}`);
+                        pending.forEach(item => lines.push(`  - [${item.required ? 'Required' : 'Optional'}] ${item.text}`));
+                        lines.push('');
+                    }
+                });
+                this.report.roadmap = lines.join('\n').trim() || 'All items completed!';
+            },
+
+            renderChart() {
+                const ctx = document.getElementById('overallChart');
+                if (!ctx) return;
+                if (window._overallChart) window._overallChart.destroy();
+                const score = this.overallProgress;
+                window._overallChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [score, 100 - score],
+                            backgroundColor: ['#0078D4', '#1e293b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: false, cutout: '80%', animation: { duration: 600 }, plugins: { tooltip: { enabled: false } } }
+                });
+            },
+
+            printReport() {
+                setTimeout(() => {
+                    const ctx = document.getElementById('printChart');
+                    if (window._printChart) window._printChart.destroy();
+                    window._printChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            datasets: [{
+                                data: [this.overallProgress, 100 - this.overallProgress],
+                                backgroundColor: ['#0078D4', '#e2e8f0'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { responsive: false, cutout: '75%', animation: false, plugins: { tooltip: { enabled: false } } }
+                    });
+                    window.print();
+                }, 300);
+            },
+
+            init() {
+                this.$nextTick(() => this.renderChart());
+                this.$watch('completedIds', () => this.renderChart());
             }
         }
+    }
     </script>
 </body>
 </html>
